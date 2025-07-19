@@ -10,3 +10,9 @@ export const PageLayout = (props: PropsWithChildren) => {
     </div>
   );
 };
+
+export const SecondPageLayout = (props: PropsWithChildren) => {
+  return (
+    <div className="p-4 bg-muted h-full flex flex-col">{props.children}</div>
+  );
+};
