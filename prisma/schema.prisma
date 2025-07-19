@@ -24,10 +24,39 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  boards        Board[]
 
   @@unique([email])
   @@map("user")
 }
+
+model Board {
+  id        String    @id @default(cuid())
+  title     String
+  columns   Column[]
+  createdAt DateTime  @default(now())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+}
+
+model Column {
+  id        String   @id @default(cuid())
+  title     String
+  board     Board    @relation(fields: [boardId], references: [id])
+  boardId   String
+  tasks     Task[]
+  position  Int
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  content   String
+  column    Column   @relation(fields: [columnId], references: [id])
+  columnId  String
+  position  Int
+  createdAt DateTime @default(now())
+}
+
 
 model Session {
   id        String   @id
@@ -73,3 +102,4 @@ model Verification {
 
   @@map("verification")
 }
+

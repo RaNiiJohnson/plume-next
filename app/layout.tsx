@@ -41,8 +41,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
-          {children}
+          <div className="flex flex-col h-screen max-w-7xl mx-auto">
+            <Header />
+            <main className="flex-1 overflow-hidden">{children}</main>
+          </div>
           <Toaster />
         </ThemeProvider>
       </body>
