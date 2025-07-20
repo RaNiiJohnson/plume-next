@@ -1,32 +1,34 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import prisma from "@/lib/prisma";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Kanban, Rocket } from "lucide-react";
 
 export default async function Home() {
-  const boards = await prisma.board.findMany();
-
   return (
-    <div className="p-8 bg-muted min-h-screen">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {boards?.map((board) => (
-          <Link
-            href={`/boards/${board.id}`}
-            key={board.id}
-            className="block rounded-xl bg-card text-card-foreground shadow hover:shadow-lg transition-shadow p-6 border border-muted hover:bg-accent/60 group"
-          >
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary text-lg font-bold group-hover:bg-primary group-hover:text-primary-foreground transition">
-                {board.title[0]}
-              </span>
-              <span className="text-xl font-semibold group-hover:text-primary transition">
-                {board.title}
-              </span>
-            </div>
-            <div className="mt-2 text-muted-foreground text-sm">
-              Voir le board
-            </div>
+    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center gap-8">
+      <div className="flex flex-col items-center gap-2">
+        <Kanban className="w-16 h-16 text-primary" />
+        <h1 className="text-3xl font-semibold italic tracking-tight">
+          “Great things are done by a series of small things brought together.”
+          <br />
+          <span className="text-base not-italic font-normal">
+            — Vincent Van Gogh
+          </span>
+        </h1>
+        <p className="text-muted-foreground max-w-xl mt-4">
+          Plume helps you organize your projects, collaborate with your team,
+          and turn small steps into big achievements.
+        </p>
+      </div>
+      <div className="flex gap-4">
+        <Button asChild size="lg">
+          <Link href="/boards">
+            <Rocket className="w-5 h-5 mr-2" />
+            View my boards
           </Link>
-        ))}
+        </Button>
+        <Button asChild variant="outline" size="lg">
+          <Link href="/boards/new">+ New board</Link>
+        </Button>
       </div>
     </div>
   );

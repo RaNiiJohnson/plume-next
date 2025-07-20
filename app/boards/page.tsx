@@ -20,16 +20,16 @@ export default async function Home() {
     return unauthorized();
   }
 
-  const changeTitle = async (title: string, boardId: string) => {
-    "use server";
+  // const changeTitle = async (title: string, boardId: string) => {
+  //   "use server";
 
-    await updateBoardAction({
-      title,
-      boardId,
-    });
+  //   await updateBoardAction({
+  //     title,
+  //     boardId,
+  //   });
 
-    revalidatePath("/boards");
-  };
+  //   revalidatePath("/boards");
+  // };
 
   return (
     <SecondPageLayout>
@@ -72,7 +72,6 @@ export default async function Home() {
             </Link>
           </div>
         ))}
-        {/* Bouton pour ajouter un nouveau tableau */}
         <AddBoardButton />
       </div>
     </SecondPageLayout>

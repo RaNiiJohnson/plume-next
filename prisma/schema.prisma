@@ -36,13 +36,13 @@ model Board {
   columns   Column[]
   createdAt DateTime  @default(now())
   userId    String
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Column {
   id        String   @id @default(cuid())
   title     String
-  board     Board    @relation(fields: [boardId], references: [id])
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId   String
   tasks     Task[]
   position  Int
@@ -51,7 +51,7 @@ model Column {
 model Task {
   id        String   @id @default(cuid())
   content   String
-  column    Column   @relation(fields: [columnId], references: [id])
+  column    Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId  String
   position  Int
   createdAt DateTime @default(now())
