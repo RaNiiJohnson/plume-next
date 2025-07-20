@@ -1,0 +1,37 @@
+"use client";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
+import { BoardForm } from "./board-form";
+import { useState } from "react";
+
+export function AddBoardButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button className="flex flex-col items-center justify-center rounded-xl bg-accent/60 text-accent-foreground shadow hover:bg-accent transition-shadow p-6 border-2 border-dashed border-primary/40 hover:border-primary group min-h-[110px]">
+          <Plus className="w-8 h-8 mb-2 text-primary group-hover:scale-110 transition-transform" />
+          <span className="text-lg font-semibold group-hover:text-primary transition">
+            Nouveau tableau
+          </span>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Créer un nouveau tableau</DialogTitle>
+          <DialogDescription>Choisissez un nom.</DialogDescription>
+        </DialogHeader>
+
+        <BoardForm onSuccess={() => setOpen(false)} />
+      </DialogContent>
+    </Dialog>
+  );
+}
