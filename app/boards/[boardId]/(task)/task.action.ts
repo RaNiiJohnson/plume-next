@@ -7,11 +7,15 @@ import { revalidatePath } from "next/cache";
 import z from "zod";
 
 const TaskFormSchema = z.object({
-  content: z.string().min(2, {
-    message: "title must be at least 2 characters.",
-  }),
+  boardId: z.string(), // Ajoute le boardId ici
   columnId: z.string(),
+  content: z.string().min(1, { message: "Task content cannot be empty." }),
+  position: z.number().int().positive(),
 });
+interface TaskUpdate {
+  id: string;
+  position: number;
+}
 
 export const addTaskSafeAction = actionUser
   .inputSchema(TaskFormSchema)
@@ -32,7 +36,37 @@ export const addTaskSafeAction = actionUser
         position: taskCount + 1,
       },
     });
-    revalidatePath(`/boards/`);
+    revalidatePath(`/boards/${Input.boardId}`);
 
     return newTask;
   });
+
+export async function reorderTasks(tasks: TaskUpdate[]) {
+  if (!Array.isArray(tasks) || tasks.length === 0) {
+    return { error: "Invalid input: tasks must be a non-empty array." };
+  }
+
+  try {
+    // Utiliser une transaction pour s'assurer que toutes les mises à jour réussissent ou échouent ensemble
+    await prisma.$transaction(
+      tasks.map((task: TaskUpdate) =>
+        prisma.task.update({
+          where: { id: task.id },
+          data: { position: task.position },
+        })
+      )
+    );
+
+    revalidatePath(`/boards/`);
+
+    return { success: true, message: "Tasks reordered successfully!" };
+  } catch (error) {
+    console.error("Error reordering tasks:", error);
+    return {
+      error: "Failed to reorder tasks.",
+      details: (error as Error).message,
+    };
+  } finally {
+    await prisma.$disconnect();
+  }
+}

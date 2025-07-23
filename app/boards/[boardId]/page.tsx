@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import BoardView from "./Board";
+import BoardView from "./BoardView";
 import { getUser } from "@/lib/auth-server";
 import { unauthorized } from "next/navigation";
 
@@ -12,16 +12,25 @@ export default async function Home(props: Pageprops) {
   const params = await props.params;
 
   const board = await prisma.board.findUnique({
-    where: { id: params.boardId },
+    where: { id: params.boardId }, // <-- Ici, `params.boardId` est maintenant sûr à utiliser
     include: {
       columns: {
-        include: { tasks: true },
+        orderBy: { position: "asc" },
+        include: {
+          tasks: {
+            orderBy: { position: "asc" },
+          },
+        },
       },
     },
   });
 
   if (!user || user.id !== board?.userId) {
     return unauthorized();
+  }
+
+  if (!board) {
+    return <div>Board not found.</div>;
   }
 
   return (
