@@ -28,7 +28,7 @@ export default function SortableTask({ task }: { task: Task }) {
     id: task.id,
     data: {
       type: "task",
-      task: task,
+      task,
     },
   });
 
@@ -36,25 +36,21 @@ export default function SortableTask({ task }: { task: Task }) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0 : 1,
-    height: isDragging ? 0 : undefined,
-    overflow: isDragging ? "hidden" : undefined,
+    // height: isDragging ? 0 : undefined,
+    // overflow: isDragging ? "hidden" : undefined,
   };
-  //   return (
-  //     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-  //       <TaskItem task={task} />
-  //     </div>
-  //   );
-  // }
   return (
     <div
-      suppressHydrationWarning
       ref={setNodeRef}
       {...attributes}
       {...listeners}
       style={style}
       className="bg-background border border-muted p-3 rounded-lg shadow-sm hover:bg-accent cursor-pointer select-none"
+      suppressHydrationWarning={true}
     >
-      <span className=" text-sm font-medium">{task.content}</span>
+      <span className=" text-sm font-medium" suppressHydrationWarning={true}>
+        {task.content}
+      </span>
     </div>
   );
 }

@@ -26,9 +26,6 @@ export default async function Home() {
             View my boards
           </Link>
         </Button>
-        <Button asChild variant="outline" size="lg">
-          <Link href="/boards/new">+ New board</Link>
-        </Button>
       </div>
     </div>
   );

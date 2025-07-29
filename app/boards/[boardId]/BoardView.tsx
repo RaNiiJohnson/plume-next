@@ -2,7 +2,7 @@
 "use client";
 
 import { SecondPageLayout } from "@/components/layout";
-import { useState, useMemo } from "react"; // Importer useMemo
+import { useMemo, useState } from "react";
 import { AddColumnButton } from "./(column)/addColumnButton";
 import { AddTask } from "./(task)/AddTask";
 
@@ -13,17 +13,20 @@ import {
   closestCorners,
   useSensor,
   useSensors,
-  Active,
-  Over,
+  DragStartEvent,
+  DragOverlay,
+  DragOverEvent,
 } from "@dnd-kit/core";
 
-import { arrayMove } from "@dnd-kit/sortable";
+import { arrayMove, useSortable } from "@dnd-kit/sortable";
 import {
   addTaskSafeAction,
   reorderTasksAndColumnsSafeAction,
-} from "../board.action"; // Le chemin est correct selon ton envoi
+} from "../board.action";
 
-// Interfaces (comme tu les as fournies)
+// --- Interfaces de données ---
+// Garde ces interfaces si tu n'as pas de fichier de types centralisé,
+// mais il est fortement recommandé d'en créer un (ex: src/types/board-data.ts)
 interface Task {
   id: string;
   content: string;
@@ -44,28 +47,31 @@ interface Board {
   columns: Column[];
 }
 
-// *** NOUVEAU: Composant ColumnView pour gérer chaque colonne individuelle ***
+// --- Importations des composants Dnd Kit et autres utilitaires ---
+import TaskItem from "./(task)/TaskItem";
+import SortableTask from "./(task)/SortableTask";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import SortableTask from "./(task)/SortableTask";
+import { CSS } from "@dnd-kit/utilities";
 import { useAction } from "next-safe-action/hooks";
+import TaskOverlay from "./(task)/TaskOverlay";
 
+// --- ColumnView : Le composant d'une colonne, maintenant sortable et droppable ---
 interface ColumnViewProps {
   column: Column;
   openFormColId: string | null;
   setOpenFormColId: (id: string | null) => void;
-  // La fonction onAddTask recevra maintenant content, columnId, et boardId
   onAddTask: (
     content: string,
     columnId: string,
     boardId: string
   ) => Promise<void>;
-  boardId: string; // Ajoute boardId aux props de ColumnView
+  boardId: string;
 }
-// components/BoardView.tsx (section ColumnView)
 
 function ColumnView({
   column,
@@ -75,53 +81,76 @@ function ColumnView({
   boardId,
 }: ColumnViewProps) {
   const { setNodeRef: setDroppableNodeRef } = useDroppable({
-    id: column.id, // ID de la colonne pour le droppable
+    id: column.id,
   });
+
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: column.id,
+    data: {
+      type: "column",
+      column,
+    },
+  });
+
+  const mergedRef = (node: HTMLElement | null) => {
+    setDroppableNodeRef(node);
+    setNodeRef(node);
+  };
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    // L'opacité à 0 rend l'original invisible, le DragOverlay le remplace
+    opacity: isDragging ? 0 : 1,
+    // IMPORTANT : maintient l'élément dans le flux pour que les calculs de Dnd Kit soient corrects
+    // Si tu as des soucis, tu peux essayer `display: isDragging ? 'none' : 'block'`, mais l'opacité est préférée.
+  };
 
   return (
     <div
-      ref={setDroppableNodeRef}
+      ref={mergedRef}
+      {...attributes}
+      {...listeners}
+      style={style}
       className="bg-card border border-muted rounded-xl min-w-[260px] flex-shrink-0 shadow-md p-4 h-fit transition hover:shadow-lg"
     >
       <h3 className="font-semibold mb-4 text-lg text-card-foreground">
         {column.title}
       </h3>
       <SortableContext
-        // Make absolutely sure `column.tasks` contains valid tasks with `id` properties.
-        // Also, `map` them to `task.id` to ensure only the string IDs are passed.
         items={column.tasks.map((task) => task.id)}
         strategy={verticalListSortingStrategy}
         id={column.id}
       >
-        <div className="flex flex-col gap-3 min-h-[50px]">
+        <div className="flex flex-col gap-3">
           {column.tasks
             .slice()
             .sort((a, b) => a.position - b.position)
             .map((task) => (
-              // Make sure `key` is `task.id` and `task` prop is the full task object
               <SortableTask key={task.id} task={task} />
             ))}
-          {column.tasks.length === 0 && (
-            <div className="text-muted-foreground italic text-sm text-center py-4">
-              Glissez des tâches ici
-            </div>
-          )}
         </div>
       </SortableContext>
       <AddTask
         columnId={column.id}
-        boardId={boardId} // Passe le boardId à AddTask
+        boardId={boardId}
         showForm={openFormColId === column.id}
         onOpen={() => setOpenFormColId(column.id)}
         onClose={() => setOpenFormColId(null)}
-        // La fonction onAdd de AddTask sera appelée avec content, columnId, et boardId
         onAdd={(content, colId, bId) => onAddTask(content, colId, bId)}
       />
     </div>
   );
 }
 
-// Composant principal BoardView
+// --- Composant principal BoardView ---
 export default function BoardView({ board: initialBoard }: { board: Board }) {
   const [board, setBoard] = useState<Board>(() => ({
     ...initialBoard,
@@ -136,20 +165,19 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
 
   const [openFormColId, setOpenFormColId] = useState<string | null>(null);
 
-  const sensors = useSensors(useSensor(PointerSensor));
+  // activeItem peut être Task ou Column pour le DragOverlay
+  const [activeItem, setActiveItem] = useState<Task | Column | null>(null);
+  const [draggedItemWidth, setDraggedItemWidth] = useState<number | null>(null);
 
-  // Utilise useAction pour ta nouvelle SafeAction de reorder
+  const sensors = useSensors(useSensor(PointerSensor));
   const { executeAsync: executeReorder } = useAction(
     reorderTasksAndColumnsSafeAction
   );
-  // Pour l'ajout de tâche, tu appelles directement addTaskSafeAction dans handleAddTaskOptimistic
-  // mais si tu voulais utiliser useAction ici:
-  // const { executeAsync: executeAddTask } = useAction(addTaskSafeAction);
 
-  // Utiliser useMemo pour optimiser findColumn
-  const findColumn = useMemo(() => {
-    return (id: string | null) => board.columns.find((col) => col.id === id);
-  }, [board.columns]);
+  const findColumn = (id: string | null): Column | undefined => {
+    if (!id) return undefined;
+    return board.columns.find((col) => col.id === id);
+  };
 
   const handleAddTaskOptimistic = async (
     columnId: string,
@@ -177,40 +205,32 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
       });
       return { ...prevBoard, columns: updatedColumns };
     });
-
     setOpenFormColId(null);
-
     try {
-      // Exécute l'action serveur. Le résultat sera un objet de next-safe-action.
       const response = await addTaskSafeAction({
-        // Renommage en 'response' pour éviter la confusion
         boardId: boardId,
         columnId: columnId,
         content: content,
         position: newPosition,
       });
-
-      // Accède à la propriété `data` de la réponse de next-safe-action
-      // C'est dans `response.data` que se trouvent tes `{ success: true, task: newTask }` ou `{ success: false, error: "..." }`
       const resultData = response.data;
-
-      // Maintenant, tu peux vérifier resultData.success et resultData.task
       if (resultData?.success && resultData?.task) {
-        // Utilise l'opérateur de chaînage optionnel '?' pour plus de sécurité
         console.log(
           "Task added to DB successfully with ID:",
           resultData.task.id
         );
+        setBoard((prevBoard) => ({
+          ...prevBoard,
+          columns: prevBoard.columns.map((col) => ({
+            ...col,
+            tasks: col.tasks.map((task) =>
+              task.id === tempTaskId ? resultData.task! : task
+            ),
+          })),
+        }));
       } else {
-        console.error(
-          "Failed to add task to DB:"
-          // resultData?.error || "Unknown error"
-        );
-        alert(
-          "Erreur lors de l'ajout de la tâche : "
-          //+ (resultData?.error || "Erreur inconnue")
-        );
-        // Revert de l'état local si l'ajout échoue
+        console.error("Failed to add task to DB:");
+        alert("Erreur lors de l'ajout de la tâche : ");
         setBoard((prevBoard) => ({
           ...prevBoard,
           columns: prevBoard.columns.map((col) => ({
@@ -222,7 +242,6 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     } catch (error) {
       console.error("Error calling addTaskSafeAction:", error);
       alert("Une erreur inattendue est survenue lors de l'ajout.");
-      // Revert de l'état local si l'appel échoue
       setBoard((prevBoard) => ({
         ...prevBoard,
         columns: prevBoard.columns.map((col) => ({
@@ -232,274 +251,451 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
       }));
     }
   };
+
+  // handleDragStart : détermine le type d'élément glissé (tâche ou colonne)
+  function handleDragStart(event: DragStartEvent) {
+    const { active } = event;
+    const type = active.data.current?.type;
+    console.log(active);
+
+    // Capture la largeur de l'élément que tu commences à glisser
+    // Utilise active.rect.current.initial?.width pour la largeur initiale
+    // ou active.rect.current.measured.width si tu préfères la largeur mesurée après le drag
+    setDraggedItemWidth(active.rect.current.initial?.width || null);
+
+    if (type === "task") {
+      const sourceColumnId = active.data.current?.sortable
+        ?.containerId as string;
+      const sourceColumn = board.columns.find((c) => c.id === sourceColumnId);
+      if (sourceColumn) {
+        const task = sourceColumn.tasks.find((t) => t.id === active.id);
+        if (task) {
+          setActiveItem(task);
+        }
+      }
+    } else if (type === "column") {
+      const column = board.columns.find((c) => c.id === active.id);
+      if (column) {
+        setActiveItem(column);
+      }
+    }
+    // console.log("Drag Started:", { active, activeItem, draggedItemWidth }); // Pour le débogage
+  }
+
+  // handleDragCancel : réinitialise l'état du drag
+  function handleDragCancel() {
+    setActiveItem(null);
+    setDraggedItemWidth(null);
+  }
+
+  // handleDragEnd : gère le réordonnancement pour les tâches et les colonnes
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
-    // --- DEBUT DEBUG AVANCÉ ---
-    console.log("--- DRAG END EVENT ---");
-    console.log("Active Object (raw):", active);
-    console.log("Over Object (raw):", over);
-    console.log("----------------------");
-    // --- FIN DEBUG AVANCÉ ---
+    // Nettoie l'état du drag
+    setActiveItem(null);
+    setDraggedItemWidth(null);
 
     if (!over) {
       console.log("No valid droppable target.");
       return;
     }
 
-    const activeId = String(active.id); // ID de la tâche déplacée
-    const overId = String(over.id); // ID de l'élément cible (peut être une tâche ou une colonne)
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const draggedItemType = active.data.current?.type;
 
-    // --- 1. Détermination de la colonne SOURCE ---
-    // active.data.current devrait contenir des infos sur le SortableContext parent.
-    const sourceColumnId = active.data.current?.sortable?.containerId;
+    console.log("🎯 Drag End Debug:", {
+      activeId,
+      overId,
+      draggedItemType,
+      activeData: active.data.current,
+      overData: over.data.current,
+    });
 
-    console.log("Calculated sourceColumnId:", sourceColumnId);
+    // --- DÉPLACEMENT DE COLONNES ---
+    if (draggedItemType === "column") {
+      const oldIndex = board.columns.findIndex((col) => col.id === activeId);
+      const newIndex = board.columns.findIndex((col) => col.id === overId);
 
-    const sourceColumn = findColumn(sourceColumnId || null); // Utilisez null pour le cas où sourceColumnId est undefined
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
+        console.log("Column drag ended without effective change.");
+        return;
+      }
 
-    if (!sourceColumn) {
-      console.error(
-        "CRITICAL ERROR: Source column not found for active item. " +
-          "active.id:",
-        activeId,
-        "active.data.current:",
-        active.data.current,
-        "sourceColumnId (from dnd-kit):",
-        sourceColumnId
+      const newOrderedColumns = arrayMove(board.columns, oldIndex, newIndex);
+      const updatedColumnsWithPositions = newOrderedColumns.map(
+        (col, index) => ({
+          ...col,
+          position: index + 1,
+        })
       );
-      // Ceci est l'erreur que nous essayons de résoudre.
-      // Si sourceColumnId est undefined, cela indique que dnd-kit n'a pas pu identifier le conteneur sortable.
+
+      setBoard((prevBoard) => ({
+        ...prevBoard,
+        columns: updatedColumnsWithPositions,
+      }));
+
+      try {
+        const reorderResult = await executeReorder({
+          type: "reorderColumns",
+          boardId: board.id,
+          columns: updatedColumnsWithPositions.map((c) => ({
+            id: c.id,
+            position: c.position,
+          })),
+        });
+
+        if (reorderResult.data?.success) {
+          console.log("Columns reordered successfully!");
+        } else {
+          console.error(
+            "Failed to reorder columns:",
+            reorderResult.data?.error
+          );
+          alert("Erreur lors de la réorganisation des colonnes.");
+        }
+      } catch (error) {
+        console.error("Unexpected error during column reorder:", error);
+        alert("Une erreur inattendue est survenue.");
+      }
       return;
     }
-    console.log(
-      "Source Column Found:",
-      sourceColumn.title,
-      "(ID:",
-      sourceColumn.id,
-      ")"
+
+    // --- DÉPLACEMENT DE TÂCHES ---
+    const sourceColumnId = active.data.current?.sortable?.containerId;
+
+    console.log("🔍 Source Column ID:", sourceColumnId);
+
+    const sourceColumn = findColumn(
+      sourceColumnId ? String(sourceColumnId) : null
     );
+
+    if (!sourceColumn) {
+      console.error("Source column not found.");
+      return;
+    }
 
     const activeTask = sourceColumn.tasks.find((task) => task.id === activeId);
     if (!activeTask) {
-      console.error(
-        "Active task not found in source column:",
-        activeId,
-        "in column:",
-        sourceColumn.id
-      );
+      console.error("Active task not found in source column.");
       return;
     }
-    console.log("Active Task Found:", activeTask.content);
 
-    // --- 2. Détermination de la colonne de DESTINATION ---
     let destinationColumnId: string | null = null;
 
-    // Cas A: L'élément 'over' est une AUTRE TÂCHE (qui est un sortable item).
-    // Son `containerId` est l'ID de sa colonne.
+    // Cas 1 : `over` est une tâche → récupère la colonne via containerId
     if (over.data.current?.sortable?.containerId) {
-      destinationColumnId = over.data.current.sortable.containerId as string;
+      destinationColumnId = String(over.data.current.sortable.containerId);
       console.log(
-        "Over is a sortable task. Destination column ID from over.data.current:",
+        "📍 Dropped on task, destination column:",
         destinationColumnId
       );
     }
-    // Cas B: L'élément 'over' est directement une COLONNE (qui est un droppable).
-    // Cela arrive souvent quand on glisse vers une colonne vide ou sur l'arrière-plan d'une colonne.
-    else if (findColumn(overId)) {
-      // Vérifie si overId correspond à une de nos colonnes
-      destinationColumnId = overId;
-      console.log(
-        "Over is a column droppable. Destination column ID from over.id:",
-        destinationColumnId
-      );
-    }
-    // Cas C: Fallback. Si 'over' n'est ni une tâche sortable ni une colonne droppable directe,
-    // cela peut indiquer un drop non valide ou un problème inattendu.
+    // Cas 2 : `over` est une colonne (ex: colonne vide) → utilise over.id
     else {
-      console.error(
-        "Destination column ID could not be determined for overId:",
-        overId,
-        "over.data.current:",
-        over.data.current
-      );
-      return;
+      // Cas 2: Déposé directement sur une colonne
+      const overColumn = findColumn(String(over.id));
+      if (overColumn) {
+        destinationColumnId = String(over.id);
+        console.log(
+          "📍 Dropped on column, destination column:",
+          destinationColumnId
+        );
+      } else {
+        console.error("Could not determine destination column", { over });
+        return;
+      }
     }
 
     const destinationColumn = findColumn(destinationColumnId);
     if (!destinationColumn) {
-      console.error(
-        "Destination column not found for ID:",
-        destinationColumnId
-      );
+      console.error("Destination column not found after ID resolution.");
       return;
     }
+    console.log("🎯 Final determination:", {
+      sourceColumnId: sourceColumn.id,
+      destinationColumnId: destinationColumn.id,
+      isSameColumn: sourceColumn.id === destinationColumn.id,
+    });
 
-    // --- Scénario 1: Glisser-déposer à l'intérieur de la MÊME COLONNE ---
+    // --- MÊME COLONNE ---
     if (sourceColumn.id === destinationColumn.id) {
-      const oldIndex = sourceColumn.tasks.findIndex(
-        (task) => task.id === activeId
-      );
-      const newIndex = sourceColumn.tasks.findIndex(
-        (task) => task.id === overId
-      );
+      console.log("🔄 Same column reorder");
+      const oldIndex = sourceColumn.tasks.findIndex((t) => t.id === activeId);
+      const newIndex = sourceColumn.tasks.findIndex((t) => t.id === overId);
 
-      if (oldIndex === -1 || newIndex === -1) {
-        console.error(
-          "Indices not found for same column reorder. activeId:",
-          activeId,
-          "overId:",
-          overId
-        );
-        return;
-      }
+      if (oldIndex === -1 || newIndex === -1) return;
 
-      const newOrderedTasksInColumn = arrayMove(
+      const updatedTasks = arrayMove(
         sourceColumn.tasks,
         oldIndex,
         newIndex
-      );
+      ).map((task, index) => ({
+        ...task,
+        position: index + 1,
+      }));
 
-      const updatedTasksWithPositions = newOrderedTasksInColumn.map(
-        (task, index) => ({
-          ...task,
-          position: index + 1,
-        })
-      );
-
-      setBoard((prevBoard) => ({
-        ...prevBoard,
-        columns: prevBoard.columns.map((col) =>
-          col.id === sourceColumn.id
-            ? { ...col, tasks: updatedTasksWithPositions }
-            : col
+      setBoard((prev) => ({
+        ...prev,
+        columns: prev.columns.map((col) =>
+          col.id === sourceColumn.id ? { ...col, tasks: updatedTasks } : col
         ),
       }));
 
       try {
-        const reorderResult = await executeReorder({
+        const result = await executeReorder({
           type: "reorderSameColumn",
-          boardId: board.id, // <-- AJOUTE LE BOARD ID ICI
+          boardId: board.id,
           columnId: sourceColumn.id,
-          tasks: updatedTasksWithPositions.map((t) => ({
-            id: t.id,
-            position: t.position,
-          })),
+          tasks: updatedTasks.map((t) => ({ id: t.id, position: t.position })),
         });
-
-        if (reorderResult.data?.success) {
-          console.log("Tasks reordered in same column successfully!");
-        } else {
-          console.error(
-            "Failed to reorder tasks in same column:",
-            reorderResult.data?.error
-          );
-          alert(
-            "Erreur lors de la réorganisation des tâches dans la même colonne."
-          );
-          // Optionnel: Revert de l'état si l'action échoue
-        }
+        if (!result.data?.success) throw new Error(result.data?.error);
       } catch (error) {
-        console.error("Unexpected error during same column reorder:", error);
-        alert("Une erreur inattendue est survenue.");
+        console.error("Reorder same column failed:", error);
+        alert("Erreur lors du réordonnancement.");
       }
     }
-    // --- Scénario 2: Glisser-déposer VERS UNE AUTRE COLONNE ---
+    // --- ENTRE COLONNES ---
     else {
-      let newSourceColumnTasks = [...sourceColumn.tasks];
-      let newDestinationColumnTasks = [...destinationColumn.tasks];
+      console.log("🔀 Between columns move");
+      const [movedTask] = sourceColumn.tasks.filter((t) => t.id === activeId);
+      if (!movedTask) return;
 
-      const [taskToMove] = newSourceColumnTasks.splice(
-        sourceColumn.tasks.findIndex((task) => task.id === activeId),
-        1
-      );
+      // Tâches restantes dans la colonne source (sans la tâche déplacée)
+      const sourceTasks = sourceColumn.tasks
+        .filter((t) => t.id !== activeId)
+        .map((t, i) => ({ ...t, position: i + 1 }));
 
-      if (!taskToMove) {
-        console.error("Task to move not found in source column after splice.");
-        return;
+      // Logique pour insérer dans la colonne de destination
+      const destTasks = [...destinationColumn.tasks];
+
+      // CORRECTION : Gestion des différents cas d'insertion
+      let insertIndex = -1;
+
+      // Cas 1: On dépose sur une tâche spécifique
+      if (over.data.current?.type === "task") {
+        insertIndex = destTasks.findIndex((t) => t.id === overId);
+      }
+      // Cas 2: On dépose sur une colonne (elle peut être vide ou non)
+      else if (
+        over.data.current?.type === "column" ||
+        findColumn(String(over.id))
+      ) {
+        // Si la colonne est vide ou qu'on dépose sur la colonne elle-même,
+        // on ajoute à la fin
+        insertIndex = destTasks.length;
       }
 
-      let insertIndex: number;
-      if (over.id === destinationColumn.id) {
-        // Droppé directement sur l'ID de la colonne (souvent vide ou pour ajouter à la fin)
-        insertIndex = newDestinationColumnTasks.length;
-      } else {
-        // Droppé sur une tâche existante dans la colonne de destination
-        insertIndex = newDestinationColumnTasks.findIndex(
-          (task) => task.id === overId
-        );
-        if (insertIndex === -1) {
-          // Si la cible n'est pas une tâche spécifique, ajoute à la fin.
-          insertIndex = newDestinationColumnTasks.length;
-        }
+      // Insérer la tâche à la bonne position
+      if (insertIndex === -1) {
+        // Par sécurité, ajouter à la fin si on ne trouve pas de position
+        insertIndex = destTasks.length;
       }
 
-      newDestinationColumnTasks.splice(insertIndex, 0, {
-        ...taskToMove,
-        columnId: destinationColumn.id, // Mise à jour du columnId
-      });
+      // Créer la tâche avec le bon columnId
+      const taskToInsert = {
+        ...movedTask,
+        columnId: destinationColumn.id,
+      };
 
-      const updatedSourceColumnTasks = newSourceColumnTasks.map(
-        (task, index) => ({
-          ...task,
-          position: index + 1,
-        })
-      );
-      const updatedDestinationColumnTasks = newDestinationColumnTasks.map(
-        (task, index) => ({
-          ...task,
-          position: index + 1,
-        })
-      );
+      // Insérer la tâche
+      destTasks.splice(insertIndex, 0, taskToInsert);
 
-      setBoard((prevBoard) => ({
-        ...prevBoard,
-        columns: prevBoard.columns.map((col) => {
-          if (col.id === sourceColumn.id) {
-            return { ...col, tasks: updatedSourceColumnTasks };
-          }
-          if (col.id === destinationColumn.id) {
-            return { ...col, tasks: updatedDestinationColumnTasks };
-          }
+      // Recalculer toutes les positions dans la colonne de destination
+      const updatedDestinationTasks = destTasks.map((t, i) => ({
+        ...t,
+        position: i + 1,
+      }));
+
+      // Mettre à jour l'état local
+      setBoard((prev) => ({
+        ...prev,
+        columns: prev.columns.map((col) => {
+          if (col.id === sourceColumn.id) return { ...col, tasks: sourceTasks };
+          if (col.id === destinationColumn.id)
+            return { ...col, tasks: updatedDestinationTasks };
           return col;
         }),
       }));
 
+      // Sauvegarder en base de données
       try {
-        const reorderResult = await executeReorder({
-          // <-- Utilise executeReorder
+        console.log("Sending to database:", {
           type: "moveBetweenColumns",
-          boardId: board.id, // <-- AJOUTE LE BOARD ID ICI
-          taskId: activeTask.id,
+          boardId: board.id,
+          taskId: movedTask.id,
           newColumnId: destinationColumn.id,
-          sourceColumnTasks: updatedSourceColumnTasks.map((t) => ({
+          sourceColumnTasks: sourceTasks.map((t) => ({
             id: t.id,
             position: t.position,
           })),
-          destinationColumnTasks: updatedDestinationColumnTasks.map((t) => ({
+          destinationColumnTasks: updatedDestinationTasks.map((t) => ({
             id: t.id,
             position: t.position,
           })),
         });
 
-        if (reorderResult.data?.success) {
-          console.log("Task moved between columns successfully!");
+        const result = await executeReorder({
+          type: "moveBetweenColumns",
+          boardId: board.id,
+          taskId: movedTask.id,
+          newColumnId: destinationColumn.id,
+          sourceColumnTasks: sourceTasks.map((t) => ({
+            id: t.id,
+            position: t.position,
+          })),
+          destinationColumnTasks: updatedDestinationTasks.map((t) => ({
+            id: t.id,
+            position: t.position,
+          })),
+        });
+
+        if (!result.data?.success) {
+          console.error("Database update failed:", result.data?.error);
+          throw new Error(result.data?.error || "Move failed");
         } else {
-          console.error(
-            "Failed to move task between columns:",
-            reorderResult.data?.error
-          );
-          alert("Erreur lors du déplacement de la tâche entre les colonnes.");
-          // Optionnel: Revert de l'état si l'action échoue
+          console.log("✅ Successfully saved to database!");
         }
       } catch (error) {
-        console.error("Unexpected error moving task between columns:", error);
-        alert(
-          "Une erreur inattendue est survenue lors du déplacement de la tâche."
-        );
+        console.error("❌ Move between columns failed:", error);
+        alert("Erreur lors du déplacement. La page va être rechargée.");
+        // Optionnel : recharger la page en cas d'erreur
+        window.location.reload();
       }
     }
   }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event;
+
+    if (!over) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    if (activeId === overId) return;
+
+    const isActiveTask = active.data.current?.type === "task";
+    const isOverTask = over.data.current?.type === "task";
+    const isOverColumn = over.data.current?.type === "column";
+
+    console.log("🔄 DragOver:", {
+      activeId,
+      overId,
+      isActiveTask,
+      isOverTask,
+      isOverColumn,
+      activeContainer: active.data.current?.sortable?.containerId,
+      overContainer: over.data.current?.sortable?.containerId,
+    });
+
+    // On ne gère que le drag de tâches
+    if (!isActiveTask) return;
+
+    // --- Cas 1 : Déposer une tâche sur une autre tâche ---
+    // if (isActiveTask && isOverTask) {
+    //   const sourceColumnId = active.data.current?.sortable
+    //     ?.containerId as string;
+    //   const destinationColumnId = over.data.current?.sortable
+    //     ?.containerId as string;
+
+    //   console.log("📋 Task over task:", {
+    //     sourceColumnId,
+    //     destinationColumnId,
+    //   });
+
+    //   // Si on change de colonne
+    //   if (sourceColumnId !== destinationColumnId) {
+    //     console.log("🔀 Changing columns during drag over");
+
+    //     setBoard((prev) => {
+    //       const sourceColumn = prev.columns.find(
+    //         (col) => col.id === sourceColumnId
+    //       );
+    //       const destColumn = prev.columns.find(
+    //         (col) => col.id === destinationColumnId
+    //       );
+    //       if (!sourceColumn || !destColumn) return prev;
+
+    //       const task = sourceColumn.tasks.find((t) => t.id === activeId);
+    //       if (!task) return prev;
+
+    //       const newSourceTasks = sourceColumn.tasks.filter(
+    //         (t) => t.id !== activeId
+    //       );
+    //       const destTasks = [...destColumn.tasks];
+    //       const insertIndex = destTasks.findIndex((t) => t.id === overId);
+    //       destTasks.splice(
+    //         insertIndex === -1 ? destTasks.length : insertIndex,
+    //         0,
+    //         {
+    //           ...task,
+    //           columnId: destinationColumnId,
+    //         }
+    //       );
+
+    //       return {
+    //         ...prev,
+    //         columns: prev.columns.map((col) => {
+    //           if (col.id === sourceColumnId)
+    //             return { ...col, tasks: newSourceTasks };
+    //           if (col.id === destinationColumnId)
+    //             return { ...col, tasks: destTasks };
+    //           return col;
+    //         }),
+    //       };
+    //     });
+    //   }
+    // }
+
+    // --- Cas 2 : Déposer une tâche sur une colonne (vide ou non) ---
+    // if (isActiveTask && isOverColumn) {
+    //   setBoard((prev) => {
+    //     const sourceColumnId = active.data.current?.sortable
+    //       ?.containerId as string;
+    //     const destColumnId = over.id as string;
+
+    //     console.log("📋 Task over column:", { sourceColumnId, destColumnId });
+
+    //     if (sourceColumnId === destColumnId) return prev;
+
+    //     console.log("🔀 Moving to different column during drag over");
+
+    //     const sourceColumn = prev.columns.find(
+    //       (col) => col.id === sourceColumnId
+    //     );
+    //     const destColumn = prev.columns.find((col) => col.id === destColumnId);
+    //     if (!sourceColumn || !destColumn) return prev;
+
+    //     const task = sourceColumn.tasks.find((t) => t.id === activeId);
+    //     if (!task) return prev;
+
+    //     const newSourceTasks = sourceColumn.tasks.filter(
+    //       (t) => t.id !== activeId
+    //     );
+    //     const newDestTasks = [
+    //       ...destColumn.tasks,
+    //       { ...task, columnId: destColumnId },
+    //     ];
+
+    //     return {
+    //       ...prev,
+    //       columns: prev.columns.map((col) => {
+    //         if (col.id === sourceColumnId)
+    //           return { ...col, tasks: newSourceTasks };
+    //         if (col.id === destColumnId) return { ...col, tasks: newDestTasks };
+    //         return col;
+    //       }),
+    //     };
+    //   });
+    // }
+  }
+
+  const columnsId = useMemo(
+    () => board.columns.map((col) => col.id),
+    [board.columns]
+  );
 
   return (
     <SecondPageLayout>
@@ -510,30 +706,66 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
+          onDragOver={handleDragOver}
+          onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
         >
           <div className="flex gap-6 items-start h-full">
-            {board.columns.map((column) => (
-              <ColumnView
-                key={column.id}
-                column={column}
-                openFormColId={openFormColId}
-                setOpenFormColId={setOpenFormColId}
-                boardId={board.id} // Pass the boardId to ColumnView
-                // CORRECTED LINE BELOW:
-                // Pass arguments to handleAddTaskOptimistic in the correct order:
-                // (columnId, content, boardId)
-                onAddTask={(content, receivedColumnId, receivedBoardId) =>
-                  handleAddTaskOptimistic(
-                    receivedColumnId,
-                    content,
-                    receivedBoardId
-                  )
-                }
-              />
-            ))}
+            <SortableContext
+              items={columnsId}
+              strategy={horizontalListSortingStrategy}
+            >
+              {board.columns.map((column) => (
+                <ColumnView
+                  key={column.id}
+                  column={column}
+                  openFormColId={openFormColId}
+                  setOpenFormColId={setOpenFormColId}
+                  boardId={board.id}
+                  onAddTask={(content, receivedColumnId, receivedBoardId) =>
+                    handleAddTaskOptimistic(
+                      receivedColumnId,
+                      content,
+                      receivedBoardId
+                    )
+                  }
+                />
+              ))}
+            </SortableContext>
             <AddColumnButton boardId={board.id} />
           </div>
+
+          <DragOverlay>
+            {activeItem ? (
+              <div
+                style={{
+                  width: draggedItemWidth || undefined,
+                  opacity: 0.9,
+                  zIndex: 9999,
+                  borderRadius: "0.5rem",
+                  padding: "1rem",
+                  boxSizing: "border-box",
+                }}
+                className="rotate-2" // Optionnel : rotation subtile via CSS
+              >
+                {"content" in activeItem ? (
+                  <TaskOverlay task={activeItem as Task} />
+                ) : (
+                  <div className="bg-card border border-muted rounded-xl p-4 shadow-lg">
+                    <h3 className="font-semibold mb-4 text-lg text-card-foreground">
+                      {(activeItem as Column).title}
+                    </h3>
+                    <div className="text-muted-foreground italic text-sm text-center py-4">
+                      {(activeItem as Column).tasks.length > 0
+                        ? `(${(activeItem as Column).tasks.length} tâches)`
+                        : "Pas de tâches"}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </DragOverlay>
         </DndContext>
       </div>
     </SecondPageLayout>
