@@ -35,16 +35,8 @@ export default function SortableTask({ task }: { task: Task }) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0 : 1,
-    height: isDragging ? 0 : undefined,
-    overflow: isDragging ? "hidden" : undefined,
+    opacity: isDragging ? 0.3 : 1,
   };
-  //   return (
-  //     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-  //       <TaskItem task={task} />
-  //     </div>
-  //   );
-  // }
   return (
     <div
       suppressHydrationWarning

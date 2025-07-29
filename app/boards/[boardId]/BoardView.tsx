@@ -112,7 +112,7 @@ function ColumnView({
     transform: CSS.Transform.toString(transform),
     transition,
     // L'opacité à 0 rend l'original invisible, le DragOverlay le remplace
-    opacity: isDragging ? 0 : 1,
+    opacity: isDragging ? 0.3 : 1,
     // IMPORTANT : maintient l'élément dans le flux pour que les calculs de Dnd Kit soient corrects
     // Si tu as des soucis, tu peux essayer `display: isDragging ? 'none' : 'block'`, mais l'opacité est préférée.
   };
@@ -124,7 +124,7 @@ function ColumnView({
       {...attributes}
       {...listeners}
       style={style}
-      className="bg-card border border-muted rounded-xl min-w-[260px] flex-shrink-0 shadow-md p-4 transition hover:shadow-lg min-h-[150px]"
+      className="bg-card border border-muted rounded-xl min-w-[300px] flex-shrink-0 shadow-md p-4 transition hover:shadow-lg min-h-[150px]"
     >
       <h3 className="font-semibold mb-4 text-lg text-card-foreground">
         {column.title}
@@ -567,131 +567,37 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     }
   }
 
-  function handleDragOver(event: DragOverEvent) {
-    const { active, over } = event;
+  // function handleDragOver(event: DragOverEvent) {
+  //   const { active, over } = event;
 
-    if (!over) return;
+  //   if (!over) return;
 
-    const activeId = active.id;
-    const overId = over.id;
+  //   const activeId = active.id;
+  //   const overId = over.id;
 
-    if (activeId === overId) return;
+  //   if (activeId === overId) return;
 
-    const isActiveTask = active.data.current?.type === "task";
-    const isOverTask = over.data.current?.type === "task";
-    const isOverColumn = over.data.current?.type === "column";
+  //   const isActiveTask = active.data.current?.type === "task";
+  //   const isOverTask = over.data.current?.type === "task";
+  //   const isOverColumn = over.data.current?.type === "column";
 
-    console.log("🔄 DragOver:", {
-      activeId,
-      overId,
-      isActiveTask,
-      isOverTask,
-      isOverColumn,
-      activeContainer: active.data.current?.sortable?.containerId,
-      overContainer: over.data.current?.sortable?.containerId,
-    });
+  //   console.log("🔄 DragOver:", {
+  //     activeId,
+  //     overId,
+  //     isActiveTask,
+  //     isOverTask,
+  //     isOverColumn,
+  //     activeContainer: active.data.current?.sortable?.containerId,
+  //     overContainer: over.data.current?.sortable?.containerId,
+  //   });
 
-    // On ne gère que le drag de tâches
-    if (!isActiveTask) return;
+  //   // On ne gère que le drag de tâches
+  //   if (!isActiveTask) return;
 
-    // --- Cas 1 : Déposer une tâche sur une autre tâche ---
-    // if (isActiveTask && isOverTask) {
-    //   const sourceColumnId = active.data.current?.sortable
-    //     ?.containerId as string;
-    //   const destinationColumnId = over.data.current?.sortable
-    //     ?.containerId as string;
+  //   //--- Cas 1 : Déposer une tâche sur une autre tâche ---
 
-    //   console.log("📋 Task over task:", {
-    //     sourceColumnId,
-    //     destinationColumnId,
-    //   });
-
-    //   // Si on change de colonne
-    //   if (sourceColumnId !== destinationColumnId) {
-    //     console.log("🔀 Changing columns during drag over");
-
-    //     setBoard((prev) => {
-    //       const sourceColumn = prev.columns.find(
-    //         (col) => col.id === sourceColumnId
-    //       );
-    //       const destColumn = prev.columns.find(
-    //         (col) => col.id === destinationColumnId
-    //       );
-    //       if (!sourceColumn || !destColumn) return prev;
-
-    //       const task = sourceColumn.tasks.find((t) => t.id === activeId);
-    //       if (!task) return prev;
-
-    //       const newSourceTasks = sourceColumn.tasks.filter(
-    //         (t) => t.id !== activeId
-    //       );
-    //       const destTasks = [...destColumn.tasks];
-    //       const insertIndex = destTasks.findIndex((t) => t.id === overId);
-    //       destTasks.splice(
-    //         insertIndex === -1 ? destTasks.length : insertIndex,
-    //         0,
-    //         {
-    //           ...task,
-    //           columnId: destinationColumnId,
-    //         }
-    //       );
-
-    //       return {
-    //         ...prev,
-    //         columns: prev.columns.map((col) => {
-    //           if (col.id === sourceColumnId)
-    //             return { ...col, tasks: newSourceTasks };
-    //           if (col.id === destinationColumnId)
-    //             return { ...col, tasks: destTasks };
-    //           return col;
-    //         }),
-    //       };
-    //     });
-    //   }
-    // }
-
-    // --- Cas 2 : Déposer une tâche sur une colonne (vide ou non) ---
-    // if (isActiveTask && isOverColumn) {
-    //   setBoard((prev) => {
-    //     const sourceColumnId = active.data.current?.sortable
-    //       ?.containerId as string;
-    //     const destColumnId = over.id as string;
-
-    //     console.log("📋 Task over column:", { sourceColumnId, destColumnId });
-
-    //     if (sourceColumnId === destColumnId) return prev;
-
-    //     console.log("🔀 Moving to different column during drag over");
-
-    //     const sourceColumn = prev.columns.find(
-    //       (col) => col.id === sourceColumnId
-    //     );
-    //     const destColumn = prev.columns.find((col) => col.id === destColumnId);
-    //     if (!sourceColumn || !destColumn) return prev;
-
-    //     const task = sourceColumn.tasks.find((t) => t.id === activeId);
-    //     if (!task) return prev;
-
-    //     const newSourceTasks = sourceColumn.tasks.filter(
-    //       (t) => t.id !== activeId
-    //     );
-    //     const newDestTasks = [
-    //       ...destColumn.tasks,
-    //       { ...task, columnId: destColumnId },
-    //     ];
-
-    //     return {
-    //       ...prev,
-    //       columns: prev.columns.map((col) => {
-    //         if (col.id === sourceColumnId)
-    //           return { ...col, tasks: newSourceTasks };
-    //         if (col.id === destColumnId) return { ...col, tasks: newDestTasks };
-    //         return col;
-    //       }),
-    //     };
-    //   });
-    // }
-  }
+  //   // --- Cas 2 : Déposer une tâche sur une colonne (vide ou non) ---
+  // }
 
   const columnsId = useMemo(
     () => board.columns.map((col) => col.id),
@@ -708,7 +614,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           sensors={sensors}
           collisionDetection={pointerWithin}
           // modifiers={[restrictToHorizontalAxis, restrictToWindowEdges]}
-          onDragOver={handleDragOver}
+          // onDragOver={handleDragOver}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}

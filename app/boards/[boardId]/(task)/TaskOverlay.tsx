@@ -9,7 +9,7 @@ interface TaskOverlayProps {
 export default function TaskOverlay({ task, width }: TaskOverlayProps) {
   return (
     <div
-      className="rounded-md p-3 shadow-md bg-card"
+      className="bg-background border border-muted p-3 rounded-lg shadow-sm hover:bg-accent cursor-pointer select-none"
       style={width ? { width } : undefined}
     >
       {task.content}
