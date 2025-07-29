@@ -5,17 +5,21 @@ import { SecondPageLayout } from "@/components/layout";
 import { useMemo, useState } from "react";
 import { AddColumnButton } from "./(column)/addColumnButton";
 import { AddTask } from "./(task)/AddTask";
-
+import {
+  restrictToHorizontalAxis,
+  restrictToWindowEdges, // <-- Ajoute ceci
+} from "@dnd-kit/modifiers";
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
   PointerSensor,
   closestCorners,
+  pointerWithin,
   useSensor,
   useSensors,
-  DragStartEvent,
-  DragOverlay,
-  DragOverEvent,
 } from "@dnd-kit/core";
 
 import { arrayMove, useSortable } from "@dnd-kit/sortable";
@@ -48,16 +52,15 @@ interface Board {
 }
 
 // --- Importations des composants Dnd Kit et autres utilitaires ---
-import TaskItem from "./(task)/TaskItem";
-import SortableTask from "./(task)/SortableTask";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
-  verticalListSortingStrategy,
   horizontalListSortingStrategy,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useAction } from "next-safe-action/hooks";
+import SortableTask from "./(task)/SortableTask";
 import TaskOverlay from "./(task)/TaskOverlay";
 
 // --- ColumnView : Le composant d'une colonne, maintenant sortable et droppable ---
@@ -121,7 +124,7 @@ function ColumnView({
       {...attributes}
       {...listeners}
       style={style}
-      className="bg-card border border-muted rounded-xl min-w-[260px] flex-shrink-0 shadow-md p-4 h-fit transition hover:shadow-lg"
+      className="bg-card border border-muted rounded-xl min-w-[260px] flex-shrink-0 shadow-md p-4 transition hover:shadow-lg min-h-[150px]"
     >
       <h3 className="font-semibold mb-4 text-lg text-card-foreground">
         {column.title}
@@ -703,13 +706,14 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
       <div className="flex-1 flex overflow-x-auto">
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCorners}
+          collisionDetection={pointerWithin}
+          // modifiers={[restrictToHorizontalAxis, restrictToWindowEdges]}
           onDragOver={handleDragOver}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          <div className="flex gap-6 items-start h-full">
+          <div className="flex gap-8 items-start ">
             <SortableContext
               items={columnsId}
               strategy={horizontalListSortingStrategy}
@@ -736,32 +740,21 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
 
           <DragOverlay>
             {activeItem ? (
-              <div
-                style={{
-                  width: draggedItemWidth || undefined,
-                  opacity: 0.9,
-                  zIndex: 9999,
-                  borderRadius: "0.5rem",
-                  padding: "1rem",
-                  boxSizing: "border-box",
-                }}
-                className="rotate-2" // Optionnel : rotation subtile via CSS
-              >
-                {"content" in activeItem ? (
-                  <TaskOverlay task={activeItem as Task} />
-                ) : (
-                  <div className="bg-card border border-muted rounded-xl p-4 shadow-lg">
-                    <h3 className="font-semibold mb-4 text-lg text-card-foreground">
-                      {(activeItem as Column).title}
-                    </h3>
-                    <div className="text-muted-foreground italic text-sm text-center py-4">
-                      {(activeItem as Column).tasks.length > 0
-                        ? `(${(activeItem as Column).tasks.length} tâches)`
-                        : "Pas de tâches"}
-                    </div>
-                  </div>
-                )}
-              </div>
+              "tasks" in activeItem ? (
+                <ColumnView
+                  key={activeItem.id}
+                  column={activeItem as Column}
+                  openFormColId={openFormColId}
+                  setOpenFormColId={setOpenFormColId}
+                  boardId={board.id}
+                  onAddTask={handleAddTaskOptimistic}
+                />
+              ) : (
+                <TaskOverlay
+                  task={activeItem as Task}
+                  width={draggedItemWidth || undefined}
+                />
+              )
             ) : null}
           </DragOverlay>
         </DndContext>
