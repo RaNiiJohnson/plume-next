@@ -1,4 +1,3 @@
-// components/(task)/SortableTask.tsx
 "use client";
 
 import { useSortable } from "@dnd-kit/sortable";

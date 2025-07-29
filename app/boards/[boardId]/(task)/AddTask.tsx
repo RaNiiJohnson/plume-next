@@ -1,4 +1,4 @@
-// components/(task)/AddTask.tsx
+
 "use client";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,7 @@ import { z } from "zod";
 // Mettons à jour ce schéma pour qu'il reflète ce que le formulaire gère directement
 const TaskFormSchema = z.object({
   content: z.string().min(2, {
-    message: "Le contenu de la carte doit avoir au moins 2 caractères.",
+    message: "The card content must be at least 2 characters long.",
   }),
   // columnId est déjà un default value et est passé via props
   // boardId est aussi passé via props, mais n'est pas directement un champ du formulaire
@@ -70,7 +70,7 @@ export const AddTask = ({
         onClick={onOpen}
       >
         <Plus />
-        <span>ajouter une carte</span>
+        <span>Add a card</span>
       </Button>
     );
   }
@@ -96,7 +96,7 @@ export const AddTask = ({
             type="submit"
             disabled={form.formState.isSubmitting}
           >
-            Ajouter une carte
+            Add card
           </Button>
           <X
             className="cursor-pointer"

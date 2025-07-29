@@ -1,26 +1,19 @@
-// components/BoardView.tsx
 "use client";
 
 import { SecondPageLayout } from "@/components/layout";
-import { useMemo, useState } from "react";
-import { AddColumnButton } from "./(column)/addColumnButton";
-import { AddTask } from "./(task)/AddTask";
-import {
-  restrictToHorizontalAxis,
-  restrictToWindowEdges, // <-- Ajoute ceci
-} from "@dnd-kit/modifiers";
 import {
   DndContext,
   DragEndEvent,
-  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
-  closestCorners,
   pointerWithin,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { useMemo, useState } from "react";
+import { AddColumnButton } from "./(column)/addColumnButton";
+import { AddTask } from "./(task)/AddTask";
 
 import { arrayMove, useSortable } from "@dnd-kit/sortable";
 import {
@@ -28,9 +21,6 @@ import {
   reorderTasksAndColumnsSafeAction,
 } from "../board.action";
 
-// --- Interfaces de données ---
-// Garde ces interfaces si tu n'as pas de fichier de types centralisé,
-// mais il est fortement recommandé d'en créer un (ex: src/types/board-data.ts)
 interface Task {
   id: string;
   content: string;
@@ -51,7 +41,6 @@ interface Board {
   columns: Column[];
 }
 
-// --- Importations des composants Dnd Kit et autres utilitaires ---
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -111,10 +100,7 @@ function ColumnView({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    // L'opacité à 0 rend l'original invisible, le DragOverlay le remplace
     opacity: isDragging ? 0.3 : 1,
-    // IMPORTANT : maintient l'élément dans le flux pour que les calculs de Dnd Kit soient corrects
-    // Si tu as des soucis, tu peux essayer `display: isDragging ? 'none' : 'block'`, mais l'opacité est préférée.
   };
 
   return (
@@ -124,7 +110,7 @@ function ColumnView({
       {...attributes}
       {...listeners}
       style={style}
-      className="bg-card border border-muted rounded-xl min-w-[300px] flex-shrink-0 shadow-md p-4 transition hover:shadow-lg min-h-[150px]"
+      className="bg-card border border-muted rounded-xl min-w-[300px] flex-shrink-0 shadow-md py-4 px-2 transition hover:shadow-lg min-h-[150px]"
     >
       <h3 className="font-semibold mb-4 text-lg text-card-foreground">
         {column.title}
@@ -174,7 +160,9 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
   const [activeItem, setActiveItem] = useState<Task | Column | null>(null);
   const [draggedItemWidth, setDraggedItemWidth] = useState<number | null>(null);
 
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 3 } })
+  );
   const { executeAsync: executeReorder } = useAction(
     reorderTasksAndColumnsSafeAction
   );

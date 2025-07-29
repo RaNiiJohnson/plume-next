@@ -50,14 +50,14 @@ export const BoardForm = ({ onSuccess }: { onSuccess?: () => void }) => {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="(ex: Projet Web)" {...field} />
+                <Input placeholder="e.g. Web Project" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <Button type="submit" disabled={form.formState.isSubmitting}>
-          Submit
+          Create
         </Button>
       </form>
     </Form>

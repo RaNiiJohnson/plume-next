@@ -61,9 +61,9 @@ export const addBoardSafeAction = actionUser
         userId: ctx.user.id,
         columns: {
           create: [
-            { title: "À faire", position: 1 },
-            { title: "En cours", position: 2 },
-            { title: "Terminé", position: 3 },
+            { title: "To Do", position: 1 },
+            { title: "Doing", position: 2 },
+            { title: "Done", position: 3 },
           ],
         },
       },

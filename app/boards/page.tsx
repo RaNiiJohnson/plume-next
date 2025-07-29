@@ -67,7 +67,7 @@ export default async function Home() {
                 </span>
               </div>
               <div className="mt-2 text-muted-foreground text-sm">
-                Voir le board
+                View board
               </div>
             </Link>
           </div>

@@ -54,14 +54,14 @@ export const ColumnForm = ({
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} placeholder="Enter list name" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <Button type="submit" disabled={form.formState.isSubmitting}>
-          Submit
+          Add list
         </Button>
       </form>
     </Form>
