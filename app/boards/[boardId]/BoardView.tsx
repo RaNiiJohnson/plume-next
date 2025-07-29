@@ -95,6 +95,7 @@ function ColumnView({
     id: column.id,
     data: {
       type: "column",
+      columnId: column.id,
       column,
     },
   });
@@ -115,6 +116,7 @@ function ColumnView({
 
   return (
     <div
+      suppressHydrationWarning={true}
       ref={mergedRef}
       {...attributes}
       {...listeners}
@@ -383,36 +385,44 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     }
 
     let destinationColumnId: string | null = null;
+    let droppedOnTask: boolean = false; // Pour savoir si on a déposé sur une tâche
 
-    // Cas 1 : `over` est une tâche → récupère la colonne via containerId
-    if (over.data.current?.sortable?.containerId) {
+    // Dnd-kit fournit souvent `over.data.current?.sortable?.containerId` pour les tâches
+    // et `over.id` pour les droppables (colonnes ou tâches)
+    if (over.data.current?.type === "task") {
+      // Déposé sur une tâche existante
       destinationColumnId = String(over.data.current.sortable.containerId);
+      droppedOnTask = true;
       console.log(
-        "📍 Dropped on task, destination column:",
+        "📍 Dropped on an existing task. Destination column:",
         destinationColumnId
       );
-    }
-    // Cas 2 : `over` est une colonne (ex: colonne vide) → utilise over.id
-    else {
-      // Cas 2: Déposé directement sur une colonne
-      const overColumn = findColumn(String(over.id));
-      if (overColumn) {
-        destinationColumnId = String(over.id);
-        console.log(
-          "📍 Dropped on column, destination column:",
-          destinationColumnId
-        );
-      } else {
-        console.error("Could not determine destination column", { over });
-        return;
-      }
+    } else if (over.data.current?.type === "column") {
+      // Déposé directement sur une colonne (y compris une colonne vide)
+      destinationColumnId = String(over.id);
+      console.log(
+        "📍 Dropped directly on a column. Destination column:",
+        destinationColumnId
+      );
+    } else {
+      // Cas où 'over' n'est ni une tâche ni une colonne reconnaissable.
+      // Cela peut arriver si l'utilisateur lâche le drag en dehors des zones droppable.
+      console.error(
+        "Invalid drop target: could not determine destination type.",
+        { over }
+      );
+      return; // Retourne, ne rien faire
     }
 
     const destinationColumn = findColumn(destinationColumnId);
     if (!destinationColumn) {
-      console.error("Destination column not found after ID resolution.");
+      console.error(
+        "Destination column not found after ID resolution (via findColumn).",
+        { destinationColumnId }
+      );
       return;
     }
+
     console.log("🎯 Final determination:", {
       sourceColumnId: sourceColumn.id,
       destinationColumnId: destinationColumn.id,
@@ -470,27 +480,15 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
       // Logique pour insérer dans la colonne de destination
       const destTasks = [...destinationColumn.tasks];
 
-      // CORRECTION : Gestion des différents cas d'insertion
-      let insertIndex = -1;
+      let insertIndex = destTasks.length; // Par défaut, insérer à la fin si on ne trouve pas de tâche "survolée"
 
-      // Cas 1: On dépose sur une tâche spécifique
-      if (over.data.current?.type === "task") {
-        insertIndex = destTasks.findIndex((t) => t.id === overId);
-      }
-      // Cas 2: On dépose sur une colonne (elle peut être vide ou non)
-      else if (
-        over.data.current?.type === "column" ||
-        findColumn(String(over.id))
-      ) {
-        // Si la colonne est vide ou qu'on dépose sur la colonne elle-même,
-        // on ajoute à la fin
-        insertIndex = destTasks.length;
-      }
-
-      // Insérer la tâche à la bonne position
-      if (insertIndex === -1) {
-        // Par sécurité, ajouter à la fin si on ne trouve pas de position
-        insertIndex = destTasks.length;
+      // Si on a déposé sur une tâche, trouver son index pour insérer avant
+      if (droppedOnTask) {
+        // Utilise le flag que tu as ajouté
+        const overTaskIndex = destTasks.findIndex((t) => t.id === overId);
+        if (overTaskIndex !== -1) {
+          insertIndex = overTaskIndex;
+        }
       }
 
       // Créer la tâche avec le bon columnId
