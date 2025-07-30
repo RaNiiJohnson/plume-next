@@ -16,10 +16,7 @@ import { useMemo, useState, useCallback } from "react";
 import { AddColumnButton } from "./(column)/addColumnButton";
 
 import { arrayMove } from "@dnd-kit/sortable";
-import {
-  addTaskSafeAction,
-  reorderTasksAndColumnsSafeAction,
-} from "../board.action";
+import { reorderTasksAndColumnsSafeAction } from "./(task)/task.action";
 
 import {
   SortableContext,
@@ -30,6 +27,7 @@ import ColumnView from "./(column)/ColumnView";
 import TaskOverlay from "./(task)/TaskOverlay";
 import { Board, Column, Task } from "@/lib/types/board";
 import { addColumnSafeAction } from "./(column)/column.action";
+import { addTaskSafeAction } from "./(task)/task.action";
 
 export default function BoardView({ board: initialBoard }: { board: Board }) {
   const [board, setBoard] = useState<Board>(() => ({
