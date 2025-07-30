@@ -1,4 +1,3 @@
-
 "use client";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +40,7 @@ export const AddTask = ({
   onOpen: () => void;
   onClose: () => void;
   // onAdd va maintenant prendre le boardId et columnId directement
+
   onAdd: (content: string, columnId: string, boardId: string) => Promise<void>;
 }) => {
   const form = useForm<z.infer<typeof TaskFormSchema>>({

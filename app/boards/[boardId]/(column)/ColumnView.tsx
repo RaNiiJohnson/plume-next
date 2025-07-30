@@ -76,7 +76,7 @@ export default function ColumnView({
         strategy={verticalListSortingStrategy}
         id={column.id}
       >
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {column.tasks
             .slice()
             .sort((a, b) => a.position - b.position)
