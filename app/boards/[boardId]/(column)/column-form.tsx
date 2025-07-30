@@ -9,10 +9,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { addColumnSafeAction } from "./column.action";
 
 const ColumnFormSchema = z.object({
   title: z.string().min(2, {
@@ -44,23 +42,6 @@ export const ColumnForm = ({
     form.reset();
     onSuccess?.();
   }
-
-  // const form = useForm<z.infer<typeof ColumnFormSchema>>({
-  //   resolver: zodResolver(ColumnFormSchema),
-  //   defaultValues: {
-  //     title: "",
-  //     boardId, // <-- important !
-  //   },
-  // });
-
-  // const { executeAsync } = useAction(addColumnSafeAction);
-
-  // async function onSubmit(values: z.infer<typeof ColumnFormSchema>) {
-  //   // await executeAsync({ ...values, boardId }); <-- PAS BESOIN DE SPREAD OU DE boardId EN PLUS
-  //   await executeAsync(values);
-  //   form.reset();
-  //   onSuccess?.();
-  // }
 
   return (
     <Form {...form}>

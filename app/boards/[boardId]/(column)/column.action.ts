@@ -4,7 +4,7 @@ import { getUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { actionUser } from "@/lib/safe-ation";
 import { revalidatePath } from "next/cache";
-import z, { success } from "zod";
+import z from "zod";
 
 const ColumnFormSchema = z.object({
   title: z.string().min(2, {
