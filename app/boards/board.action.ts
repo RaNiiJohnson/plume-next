@@ -23,35 +23,6 @@ const AddTaskSchema = z.object({
   position: z.number().int().positive(),
 });
 
-const ReorderSameColumnSchema = z.object({
-  type: z.literal("reorderSameColumn"),
-  boardId: z.string(),
-  columnId: z.string(),
-  tasks: z.array(
-    z.object({ id: z.string(), position: z.number().int().positive() })
-  ),
-});
-
-const MoveBetweenColumnsSchema = z.object({
-  type: z.literal("moveBetweenColumns"),
-  boardId: z.string(),
-  taskId: z.string(),
-  newColumnId: z.string(),
-  sourceColumnTasks: z.array(
-    z.object({ id: z.string(), position: z.number().int().positive() })
-  ),
-  destinationColumnTasks: z.array(
-    z.object({ id: z.string(), position: z.number().int().positive() })
-  ),
-});
-
-// const ReorderPayloadSchema = z.discriminatedUnion("type", [
-//   ReorderSameColumnSchema,
-//   MoveBetweenColumnsSchema,
-// ]);
-
-// --- Actions ---
-
 export const addBoardSafeAction = actionUser
   .inputSchema(BoardFormSchema)
   .action(async ({ parsedInput: Input, ctx }) => {
@@ -120,6 +91,7 @@ export const addTaskSafeAction = actionUser
     revalidatePath(`/boards/${parsedInput.boardId}`);
     return { success: true, task: newTask };
   });
+
 const ReorderPayloadSchema = z.discriminatedUnion("type", [
   // Cas 1: Réordonner les tâches dans la même colonne
   z.object({
@@ -148,60 +120,6 @@ const ReorderPayloadSchema = z.discriminatedUnion("type", [
     columns: z.array(z.object({ id: z.string(), position: z.number() })), // Les données que tu envoies pour les colonnes
   }),
 ]);
-// export const reorderTasksAndColumnsSafeAction = actionUser
-//   .inputSchema(ReorderPayloadSchema)
-//   .action(async ({ parsedInput, ctx }) => {
-//     try {
-//       await prisma.$transaction(async (tx) => {
-//         if (parsedInput.type === "reorderSameColumn") {
-//           for (const task of parsedInput.tasks) {
-//             await tx.task.update({
-//               where: { id: task.id },
-//               data: { position: task.position },
-//             });
-//           }
-//         } else if (parsedInput.type === "moveBetweenColumns") {
-//           await tx.task.update({
-//             where: { id: parsedInput.taskId },
-//             data: {
-//               columnId: parsedInput.newColumnId,
-//               position:
-//                 parsedInput.destinationColumnTasks.find(
-//                   (t) => t.id === parsedInput.taskId
-//                 )?.position || 1,
-//             },
-//           });
-
-//           for (const task of parsedInput.sourceColumnTasks) {
-//             await tx.task.update({
-//               where: { id: task.id },
-//               data: { position: task.position },
-//             });
-//           }
-
-//           for (const task of parsedInput.destinationColumnTasks) {
-//             if (task.id !== parsedInput.taskId) {
-//               await tx.task.update({
-//                 where: { id: task.id },
-//                 data: { position: task.position },
-//               });
-//             }
-//           }
-//         }
-//       });
-
-//       revalidatePath(`/boards/${parsedInput.boardId}`);
-//       return { success: true, message: "Board data updated successfully!" };
-//     } catch (error) {
-//       console.error("Error reordering board data:", error);
-//       return {
-//         success: false,
-//         error: "Failed to reorder board data.",
-//         details: (error as Error).message,
-//       };
-//     }
-//   });
-// Ton action serveur (board.action.ts)
 
 export const reorderTasksAndColumnsSafeAction = actionUser
   .inputSchema(ReorderPayloadSchema)
