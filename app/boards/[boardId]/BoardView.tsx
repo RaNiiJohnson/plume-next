@@ -4,6 +4,7 @@ import { SecondPageLayout } from "@/components/layout";
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
@@ -28,6 +29,7 @@ import { useAction } from "next-safe-action/hooks";
 import ColumnView from "./(column)/ColumnView";
 import TaskOverlay from "./(task)/TaskOverlay";
 import { Board, Column, Task } from "@/lib/types/board";
+import { addColumnSafeAction } from "./(column)/column.action";
 
 export default function BoardView({ board: initialBoard }: { board: Board }) {
   const [board, setBoard] = useState<Board>(() => ({
@@ -62,6 +64,63 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     [board]
   );
 
+  const handleAddColumnOptimistic = async (title: string) => {
+    const tempColumnId = `temp-${Date.now()}`;
+    setBoard((prevBoard) => ({
+      ...prevBoard,
+      columns: [
+        ...prevBoard.columns,
+        {
+          id: tempColumnId,
+          title,
+          position: prevBoard.columns.length + 1,
+          tasks: [],
+        },
+      ],
+    }));
+    try {
+      const response = await addColumnSafeAction({
+        title,
+        boardId: board.id,
+      });
+      const resultData = response.data;
+      if (resultData?.success && resultData?.column) {
+        console.log(
+          "Column added to DB successfully with ID:",
+          resultData.column.id
+        );
+
+        setBoard((prevBoard) => ({
+          ...prevBoard,
+          columns: prevBoard.columns.map((col) =>
+            col.id === tempColumnId
+              ? {
+                  ...resultData.column!,
+                  tasks: resultData.column!.tasks ?? [],
+                }
+              : col
+          ),
+        }));
+      } else {
+        console.error("Failed to add column to DB:");
+        alert("Erreur lors de l'ajout de la colonne : ");
+        setBoard((prevBoard) => ({
+          ...prevBoard,
+          columns: prevBoard.columns.filter((col) => col.id !== tempColumnId),
+        }));
+      }
+    } catch (error) {
+      console.error("Error calling addColumnSafeAction:", error);
+      alert(
+        "Une erreur inattendue est survenue lors de l'ajout de la colonne."
+      );
+      setBoard((prevBoard) => ({
+        ...prevBoard,
+        columns: prevBoard.columns.filter((col) => col.id !== tempColumnId),
+      }));
+    }
+  };
+
   const handleAddTaskOptimistic = async (
     columnId: string,
     content: string,
@@ -69,6 +128,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
   ) => {
     const tempTaskId = `temp-${Date.now()}`;
     let newPosition = 1;
+
     setBoard((prevBoard) => {
       const updatedColumns = prevBoard.columns.map((col) => {
         if (col.id === columnId) {
@@ -171,6 +231,132 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     setDraggedItemWidth(null);
   }
 
+  // function handleDragOver(event: DragOverEvent) {
+  //   const { active, over } = event;
+
+  //   if (!over) return;
+
+  //   const activeId = active.id;
+  //   const overId = over.id;
+
+  //   if (activeId === overId) return;
+
+  //   const isActiveTask = active.data.current?.type === "task";
+  //   const isOverTask = over.data.current?.type === "task";
+  //   const isOverColumn = over.data.current?.type === "column";
+
+  //   console.log("🔄 DragOver:", {
+  //     activeId,
+  //     overId,
+  //     isActiveTask,
+  //     isOverTask,
+  //     isOverColumn,
+  //     activeContainer: active.data.current?.sortable?.containerId,
+  //     overContainer: over.data.current?.sortable?.containerId,
+  //   });
+
+  //   // On ne gère que le drag de tâches
+  //   if (!isActiveTask) return;
+
+  //   // --- Cas 1 : Déposer une tâche sur une autre tâche ---
+  //   if (isActiveTask && isOverTask) {
+  //     const sourceColumnId = active.data.current?.sortable
+  //       ?.containerId as string;
+  //     const destinationColumnId = over.data.current?.sortable
+  //       ?.containerId as string;
+
+  //     console.log("📋 Task over task:", {
+  //       sourceColumnId,
+  //       destinationColumnId,
+  //     });
+
+  //     // Si on change de colonne
+  //     if (sourceColumnId !== destinationColumnId) {
+  //       console.log("🔀 Changing columns during drag over");
+
+  //       setBoard((prev) => {
+  //         const sourceColumn = prev.columns.find(
+  //           (col) => col.id === sourceColumnId
+  //         );
+  //         const destColumn = prev.columns.find(
+  //           (col) => col.id === destinationColumnId
+  //         );
+  //         if (!sourceColumn || !destColumn) return prev;
+
+  //         const task = sourceColumn.tasks.find((t) => t.id === activeId);
+  //         if (!task) return prev;
+
+  //         const newSourceTasks = sourceColumn.tasks.filter(
+  //           (t) => t.id !== activeId
+  //         );
+  //         const destTasks = [...destColumn.tasks];
+  //         const insertIndex = destTasks.findIndex((t) => t.id === overId);
+  //         destTasks.splice(
+  //           insertIndex === -1 ? destTasks.length : insertIndex,
+  //           0,
+  //           {
+  //             ...task,
+  //             columnId: destinationColumnId,
+  //           }
+  //         );
+
+  //         return {
+  //           ...prev,
+  //           columns: prev.columns.map((col) => {
+  //             if (col.id === sourceColumnId)
+  //               return { ...col, tasks: newSourceTasks };
+  //             if (col.id === destinationColumnId)
+  //               return { ...col, tasks: destTasks };
+  //             return col;
+  //           }),
+  //         };
+  //       });
+  //     }
+  //   }
+
+  //   // --- Cas 2 : Déposer une tâche sur une colonne (vide ou non) ---
+  //   if (isActiveTask && isOverColumn) {
+  //     setBoard((prev) => {
+  //       const sourceColumnId = active.data.current?.sortable
+  //         ?.containerId as string;
+  //       const destColumnId = over.id as string;
+
+  //       console.log("📋 Task over column:", { sourceColumnId, destColumnId });
+
+  //       if (sourceColumnId === destColumnId) return prev;
+
+  //       console.log("🔀 Moving to different column during drag over");
+
+  //       const sourceColumn = prev.columns.find(
+  //         (col) => col.id === sourceColumnId
+  //       );
+  //       const destColumn = prev.columns.find((col) => col.id === destColumnId);
+  //       if (!sourceColumn || !destColumn) return prev;
+
+  //       const task = sourceColumn.tasks.find((t) => t.id === activeId);
+  //       if (!task) return prev;
+
+  //       const newSourceTasks = sourceColumn.tasks.filter(
+  //         (t) => t.id !== activeId
+  //       );
+  //       const newDestTasks = [
+  //         ...destColumn.tasks,
+  //         { ...task, columnId: destColumnId },
+  //       ];
+
+  //       return {
+  //         ...prev,
+  //         columns: prev.columns.map((col) => {
+  //           if (col.id === sourceColumnId)
+  //             return { ...col, tasks: newSourceTasks };
+  //           if (col.id === destColumnId) return { ...col, tasks: newDestTasks };
+  //           return col;
+  //         }),
+  //       };
+  //     });
+  //   }
+  // }
+
   // Fonction pour gérer le drag-and-drop des colonnes
   const handleColumnDragEnd = async (activeId: string, overId: string) => {
     const oldIndex = board.columns.findIndex((col) => col.id === activeId);
@@ -210,6 +396,11 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
       }
     } catch (error) {
       console.error("Unexpected error during column reorder:", error);
+      // Rollback vers l'état précédent
+      setBoard((prevBoard) => ({
+        ...prevBoard,
+        columns: board.columns,
+      }));
       alert("Une erreur inattendue est survenue.");
     }
   };
@@ -432,8 +623,8 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
         <DndContext
           sensors={sensors}
           collisionDetection={pointerWithin}
-          // modifiers={[restrictToHorizontalAxis, restrictToWindowEdges]}
           onDragStart={handleDragStart}
+          // onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
@@ -459,7 +650,10 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
                 />
               ))}
             </SortableContext>
-            <AddColumnButton boardId={board.id} />
+            <AddColumnButton
+              onAddColumn={(title) => handleAddColumnOptimistic(title)}
+              boardId={board.id}
+            />
           </div>
 
           <DragOverlay>

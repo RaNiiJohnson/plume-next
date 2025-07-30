@@ -13,9 +13,13 @@ import { ColumnForm } from "./column-form";
 
 type AddColumnButtonProps = {
   boardId: string;
+  onAddColumn: (title: string) => Promise<void>;
 };
 
-export function AddColumnButton({ boardId }: AddColumnButtonProps) {
+export function AddColumnButton({
+  boardId,
+  onAddColumn,
+}: AddColumnButtonProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -35,7 +39,11 @@ export function AddColumnButton({ boardId }: AddColumnButtonProps) {
         <DialogHeader>
           <DialogTitle>Create a new list</DialogTitle>
         </DialogHeader>
-        <ColumnForm boardId={boardId} onSuccess={() => setOpen(false)} />
+        <ColumnForm
+          onAdd={(title) => onAddColumn(title)}
+          boardId={boardId}
+          onSuccess={() => setOpen(false)}
+        />
       </DialogContent>
     </Dialog>
   );

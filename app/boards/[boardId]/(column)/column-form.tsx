@@ -24,9 +24,11 @@ const ColumnFormSchema = z.object({
 export const ColumnForm = ({
   boardId,
   onSuccess,
+  onAdd,
 }: {
   boardId: string;
   onSuccess?: () => void;
+  onAdd: (title: string) => Promise<void>;
 }) => {
   const form = useForm<z.infer<typeof ColumnFormSchema>>({
     resolver: zodResolver(ColumnFormSchema),
@@ -36,14 +38,29 @@ export const ColumnForm = ({
     },
   });
 
-  const { executeAsync } = useAction(addColumnSafeAction);
-
   async function onSubmit(values: z.infer<typeof ColumnFormSchema>) {
     // await executeAsync({ ...values, boardId }); <-- PAS BESOIN DE SPREAD OU DE boardId EN PLUS
-    await executeAsync(values);
+    await onAdd(values.title);
     form.reset();
     onSuccess?.();
   }
+
+  // const form = useForm<z.infer<typeof ColumnFormSchema>>({
+  //   resolver: zodResolver(ColumnFormSchema),
+  //   defaultValues: {
+  //     title: "",
+  //     boardId, // <-- important !
+  //   },
+  // });
+
+  // const { executeAsync } = useAction(addColumnSafeAction);
+
+  // async function onSubmit(values: z.infer<typeof ColumnFormSchema>) {
+  //   // await executeAsync({ ...values, boardId }); <-- PAS BESOIN DE SPREAD OU DE boardId EN PLUS
+  //   await executeAsync(values);
+  //   form.reset();
+  //   onSuccess?.();
+  // }
 
   return (
     <Form {...form}>

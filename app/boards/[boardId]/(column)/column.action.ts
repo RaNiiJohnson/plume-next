@@ -4,7 +4,7 @@ import { getUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { actionUser } from "@/lib/safe-ation";
 import { revalidatePath } from "next/cache";
-import z from "zod";
+import z, { success } from "zod";
 
 const ColumnFormSchema = z.object({
   title: z.string().min(2, {
@@ -15,25 +15,26 @@ const ColumnFormSchema = z.object({
 
 export const addColumnSafeAction = actionUser
   .inputSchema(ColumnFormSchema)
-  .action(async ({ parsedInput: Input }) => {
+  .action(async ({ parsedInput }) => {
     const user = await getUser();
     if (!user) {
       throw new Error("Vous devez être connecté pour créer une liste");
     }
 
     const columnCount = await prisma.column.count({
-      where: { boardId: Input.boardId },
+      where: { boardId: parsedInput.boardId },
     });
 
     const newColumn = await prisma.column.create({
       data: {
-        title: Input.title,
-        boardId: Input.boardId,
+        title: parsedInput.title,
         position: columnCount + 1,
+        boardId: parsedInput.boardId,
       },
+      include: { tasks: true },
     });
 
-    revalidatePath(`/boards/${Input.boardId}`);
+    revalidatePath(`/boards/${parsedInput.boardId}`);
 
-    return newColumn;
+    return { success: true, column: newColumn };
   });
