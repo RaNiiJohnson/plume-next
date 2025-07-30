@@ -75,6 +75,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           title,
           position: prevBoard.columns.length + 1,
           tasks: [],
+          boardId: prevBoard.id,
         },
       ],
     }));
