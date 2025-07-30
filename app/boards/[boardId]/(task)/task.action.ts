@@ -38,7 +38,7 @@ export const addTaskSafeAction = actionUser
     });
     revalidatePath(`/boards/${Input.boardId}`);
 
-    return newTask;
+    return { success: true, task: newTask };
   });
 
 export async function reorderTasks(tasks: TaskUpdate[]) {
