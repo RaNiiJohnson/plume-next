@@ -498,7 +498,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           <Kanban size={22} strokeWidth={2.2} />
         </span>
       </div>
-      <div className="flex-1 flex overflow-x-auto">
+      <div className="flex-1 flex overflow-auto custom-scrollbar">
         <DndContext
           sensors={sensors}
           collisionDetection={pointerWithin}

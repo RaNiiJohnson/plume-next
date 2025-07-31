@@ -66,33 +66,42 @@ export default function ColumnView({
       {...attributes}
       {...listeners}
       style={style}
-      className="bg-card border border-muted rounded-xl w-[350px] h-fit space-y-3 shadow-md py-4 px-2 transition hover:shadow-lg group"
+      className="bg-card border border-muted rounded-xl w-[350px] flex flex-col shadow-md transition hover:shadow-lg group max-h-[80vh]"
     >
-      <h3 className="font-semibold text-lg text-card-foreground">
-        {column.title}
-      </h3>
-      <SortableContext
-        items={column.tasks.map((task) => task.id)}
-        strategy={verticalListSortingStrategy}
-        id={column.id}
-      >
-        <div className="flex flex-col gap-4">
-          {column.tasks
-            .slice()
-            .sort((a, b) => a.position - b.position)
-            .map((task) => (
-              <SortableTask key={task.id} task={task} />
-            ))}
-        </div>
-      </SortableContext>
-      <AddTask
-        columnId={column.id}
-        boardId={boardId}
-        showForm={openFormColId === column.id}
-        onOpen={() => setOpenFormColId(column.id)}
-        onClose={() => setOpenFormColId(null)}
-        onAdd={(content, colId, bId) => onAddTask(content, colId, bId)}
-      />
+      <div className="pt-4 px-4 ">
+        <h3 className="font-semibold text-lg text-card-foreground">
+          {column.title}
+        </h3>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-2 min-h-0 custom-scrollbar">
+        <SortableContext
+          items={column.tasks.map((task) => task.id)}
+          strategy={verticalListSortingStrategy}
+          id={column.id}
+        >
+          <div className="flex flex-col gap-4">
+            {column.tasks
+              .slice()
+              .sort((a, b) => a.position - b.position)
+              .map((task) => (
+                <SortableTask key={task.id} task={task} />
+              ))}
+          </div>
+        </SortableContext>
+      </div>
+
+      {/* Footer fixe pour AddTask */}
+      <div className="px-2 pb-2 bg-card">
+        <AddTask
+          columnId={column.id}
+          boardId={boardId}
+          showForm={openFormColId === column.id}
+          onOpen={() => setOpenFormColId(column.id)}
+          onClose={() => setOpenFormColId(null)}
+          onAdd={(content, colId, bId) => onAddTask(content, colId, bId)}
+        />
+      </div>
     </div>
   );
 }
