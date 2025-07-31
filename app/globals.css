@@ -185,11 +185,12 @@
 
 .custom-scrollbar {
   width: thin;
-  scrollbar-color: var(--muted) var(--accent);
+  scrollbar-color: var(--primary) var(--accent);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 2px;
+  width: 3px;
+  height: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
