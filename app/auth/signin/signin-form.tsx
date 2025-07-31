@@ -117,7 +117,7 @@ export function SigninForm() {
               </FormItem>
             )}
           />
-          <Button type="submit">Submit</Button>
+          <Button type="submit">Sign In</Button>
         </form>
       </Form>
       <p className="text-sm text-muted-foreground">Or</p>
