@@ -1,6 +1,6 @@
 "use client";
 
-import { SecondPageLayout } from "@/components/layout";
+import { SecondPageLayout, ThirdPageLayout } from "@/components/layout";
 import {
   DndContext,
   DragEndEvent,
@@ -28,6 +28,7 @@ import TaskOverlay from "./(task)/TaskOverlay";
 import { Board, Column, Task } from "@/lib/types/board";
 import { addColumnSafeAction } from "./(column)/column.action";
 import { addTaskSafeAction } from "./(task)/task.action";
+import { Kanban } from "lucide-react";
 
 export default function BoardView({ board: initialBoard }: { board: Board }) {
   const [board, setBoard] = useState<Board>(() => ({
@@ -488,9 +489,14 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
   );
 
   return (
-    <SecondPageLayout>
-      <div className="text-3xl font-bold text-primary tracking-tight mb-6 border-b border-muted pb-2">
-        {board.title}
+    <ThirdPageLayout>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="text-3xl font-extrabold tracking-tight drop-shadow-sm">
+          {board.title}
+        </div>
+        <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary shadow w-9 h-9">
+          <Kanban size={22} strokeWidth={2.2} />
+        </span>
       </div>
       <div className="flex-1 flex overflow-x-auto">
         <DndContext
@@ -550,6 +556,6 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           </DragOverlay>
         </DndContext>
       </div>
-    </SecondPageLayout>
+    </ThirdPageLayout>
   );
 }

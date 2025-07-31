@@ -22,7 +22,7 @@ export const addTaskSafeAction = actionUser
   .action(async ({ parsedInput }) => {
     const user = await getUser();
     if (!user) {
-      throw new Error("Vous devez être connecté pour ajouter une carte.");
+      throw new Error("You must be logged in to add a task.");
     }
 
     const newTask = await prisma.task.create({

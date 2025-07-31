@@ -66,7 +66,7 @@ export default function ColumnView({
       {...attributes}
       {...listeners}
       style={style}
-      className="bg-card border border-muted rounded-xl min-w-[300px] h-fit space-y-3 shadow-md py-4 px-2 transition hover:shadow-lg group"
+      className="bg-card border border-muted rounded-xl w-[350px] h-fit space-y-3 shadow-md py-4 px-2 transition hover:shadow-lg group"
     >
       <h3 className="font-semibold text-lg text-card-foreground">
         {column.title}

@@ -36,7 +36,6 @@ export default async function Home() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {boards?.map((board) => (
           <div key={board.id} className="relative group">
-            {/* Boutons actions en haut à droite, cachés sauf au hover */}
             <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
               <form>
                 <button
@@ -48,7 +47,6 @@ export default async function Home() {
                   }}
                   className="p-2 rounded-full bg-background border border-muted shadow hover:bg-accent text-muted-foreground hover:text-destructive transition"
                   title="Éditer"
-                  // onClick={...}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

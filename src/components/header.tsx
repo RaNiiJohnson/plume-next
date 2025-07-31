@@ -4,15 +4,18 @@ import { ThemeToggle } from "./theme-toggle";
 
 export default function Header() {
   return (
-    <div className="sticky max-w-5xl mx-auto top-0 z-50 w-screen backdrop-blur-md">
-      <div className="flex items-center gap-2 p-2">
-        <Link href="/" className="text-2xl font-bold">
+    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur">
+      <div className="mx-auto flex items-center gap-4 px-4 py-2">
+        <Link
+          href="/"
+          className="text-2xl font-bold text-primary hover:opacity-80 transition"
+        >
           Plume
         </Link>
-        <span className="flex-1"></span>
+        <span className="flex-1" />
         <ThemeToggle />
         <AuthButton />
       </div>
-    </div>
+    </header>
   );
 }
