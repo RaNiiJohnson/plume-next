@@ -11,6 +11,7 @@ import { Column } from "@/lib/types/board";
 
 interface ColumnViewProps {
   column: Column;
+  handleTaskUpdate: (taskId: string, newContent: string) => void;
   openFormColId: string | null;
   setOpenFormColId: (id: string | null) => void;
   onAddTask: (
@@ -27,6 +28,7 @@ export default function ColumnView({
   setOpenFormColId,
   onAddTask,
   boardId,
+  handleTaskUpdate,
 }: ColumnViewProps) {
   const { setNodeRef: setDroppableNodeRef } = useDroppable({
     id: column.id,
@@ -66,7 +68,8 @@ export default function ColumnView({
       {...attributes}
       {...listeners}
       style={style}
-      className="bg-card border border-muted rounded-xl w-[350px] flex flex-col shadow-md transition hover:shadow-lg group max-h-[80vh]"
+      className={`bg-card border border-muted rounded-xl w-[350px] flex flex-col shadow-md transition hover:shadow-lg max-h-[80vh] cursor-grab active:cursor-grabbing
+      `}
     >
       <div className="pt-4 px-4 ">
         <h3 className="font-semibold text-lg text-card-foreground">
@@ -85,13 +88,17 @@ export default function ColumnView({
               .slice()
               .sort((a, b) => a.position - b.position)
               .map((task) => (
-                <SortableTask key={task.id} task={task} />
+                <SortableTask
+                  onTaskUpdate={handleTaskUpdate}
+                  boardId={boardId}
+                  key={task.id}
+                  task={task}
+                />
               ))}
           </div>
         </SortableContext>
       </div>
 
-      {/* Footer fixe pour AddTask */}
       <div className="px-2 pb-2 bg-card">
         <AddTask
           columnId={column.id}

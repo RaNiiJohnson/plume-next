@@ -44,6 +44,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
 
   const [openFormColId, setOpenFormColId] = useState<string | null>(null);
 
+
   // activeItem peut être Task ou Column pour le DragOverlay
   const [activeItem, setActiveItem] = useState<Task | Column | null>(null);
   const [draggedItemWidth, setDraggedItemWidth] = useState<number | null>(null);
@@ -483,6 +484,19 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     }
   }
 
+  // Fonction pour mettre à jour une tâche dans le board
+  const handleTaskUpdate = (taskId: string, newContent: string) => {
+    setBoard((prevBoard) => ({
+      ...prevBoard,
+      columns: prevBoard.columns.map((col) => ({
+        ...col,
+        tasks: col.tasks.map((task) =>
+          task.id === taskId ? { ...task, content: newContent } : task
+        ),
+      })),
+    }));
+  };
+
   const columnsId = useMemo(
     () => board.columns.map((col) => col.id),
     [board.columns]
@@ -512,22 +526,23 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
               items={columnsId}
               strategy={horizontalListSortingStrategy}
             >
-              {board.columns.map((column) => (
-                <ColumnView
-                  key={column.id}
-                  column={column}
-                  openFormColId={openFormColId}
-                  setOpenFormColId={setOpenFormColId}
-                  boardId={board.id}
-                  onAddTask={(content, receivedColumnId, receivedBoardId) =>
-                    handleAddTaskOptimistic(
-                      receivedColumnId,
-                      content,
-                      receivedBoardId
-                    )
-                  }
-                />
-              ))}
+              {board.columns.map((column) =>  (
+                  <ColumnView
+                    handleTaskUpdate={handleTaskUpdate}
+                    key={column.id}
+                    column={column}
+                    openFormColId={openFormColId}
+                    setOpenFormColId={setOpenFormColId}
+                    boardId={board.id}
+                    onAddTask={(content, receivedColumnId, receivedBoardId) =>
+                      handleAddTaskOptimistic(
+                        receivedColumnId,
+                        content,
+                        receivedBoardId
+                      )
+                    }
+                  />
+                ))}
             </SortableContext>
             <AddColumnButton
               onAddColumn={(title) => handleAddColumnOptimistic(title)}
@@ -539,6 +554,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
             {activeItem ? (
               "tasks" in activeItem ? (
                 <ColumnView
+                  handleTaskUpdate={handleTaskUpdate}
                   key={activeItem.id}
                   column={activeItem as Column}
                   openFormColId={openFormColId}

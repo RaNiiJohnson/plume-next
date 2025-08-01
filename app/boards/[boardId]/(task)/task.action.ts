@@ -61,10 +61,40 @@ export async function reorderTasks(tasks: TaskUpdate[]) {
       error: "Failed to reorder tasks.",
       details: (error as Error).message,
     };
-  } finally {
-    await prisma.$disconnect();
   }
 }
+
+export const deleteTaskSafeAction = actionUser
+  .inputSchema(
+    z.object({
+      taskId: z.string(),
+      boardId: z.string(),
+    })
+  )
+  .action(async ({ parsedInput }) => {
+    await prisma.task.delete({
+      where: { id: parsedInput.taskId },
+    });
+    revalidatePath(`/boards/${parsedInput.boardId}`);
+    return { success: true, message: "Task deleted successfully." };
+  });
+
+export const updateTaskSafeAction = actionUser
+  .inputSchema(
+    z.object({
+      taskId: z.string(),
+      content: z.string(),
+      boardId: z.string(),
+    })
+  )
+  .action(async ({ parsedInput }) => {
+    const updatedTask = await prisma.task.update({
+      where: { id: parsedInput.taskId },
+      data: { content: parsedInput.content },
+    });
+    revalidatePath(`/boards/${parsedInput.boardId}`);
+    return { success: true, task: updatedTask };
+  });
 
 const ReorderPayloadSchema = z.discriminatedUnion("type", [
   // Cas 1: Réordonner les tâches dans la même colonne
