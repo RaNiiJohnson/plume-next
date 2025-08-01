@@ -22,6 +22,12 @@ interface ColumnViewProps {
     boardId: string
   ) => Promise<void>;
   boardId: string;
+  onMoveTask?: (
+    taskId: string,
+    currentColumnId: string,
+    targetColumnId: string
+  ) => Promise<void>;
+  availableColumns?: Column[];
 }
 
 export default function ColumnView({
@@ -31,6 +37,8 @@ export default function ColumnView({
   onAddTask,
   boardId,
   handleTaskUpdate,
+  onMoveTask,
+  availableColumns,
 }: ColumnViewProps) {
   const [isEditingTask, setIsEditingTask] = useState(false);
 
@@ -102,6 +110,9 @@ export default function ColumnView({
                   task={task}
                   onEditStart={() => setIsEditingTask(true)}
                   onEditEnd={() => setIsEditingTask(false)}
+                  onMoveTask={onMoveTask}
+                  availableColumns={availableColumns}
+                  currentColumnId={column.id}
                 />
               ))}
           </div>

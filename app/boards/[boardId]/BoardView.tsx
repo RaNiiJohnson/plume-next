@@ -29,6 +29,7 @@ import { Board, Column, Task } from "@/lib/types/board";
 import { addColumnSafeAction } from "./(column)/column.action";
 import { addTaskSafeAction } from "./(task)/task.action";
 import { Kanban } from "lucide-react";
+import ColumnOverlay from "./(column)/ColumnOverlay";
 
 export default function BoardView({ board: initialBoard }: { board: Board }) {
   const [board, setBoard] = useState<Board>(() => ({
@@ -43,7 +44,6 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
   }));
 
   const [openFormColId, setOpenFormColId] = useState<string | null>(null);
-
 
   // activeItem peut être Task ou Column pour le DragOverlay
   const [activeItem, setActiveItem] = useState<Task | Column | null>(null);
@@ -497,6 +497,69 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     }));
   };
 
+  // Fonction pour déplacer une tâche vers une autre colonne
+  const handleMoveTaskToColumn = async (
+    taskId: string,
+    currentColumnId: string,
+    targetColumnId: string
+  ) => {
+    // Trouver la tâche actuelle
+    const currentColumn = findColumn(currentColumnId);
+    const targetColumn = findColumn(targetColumnId);
+
+    if (!currentColumn || !targetColumn) return;
+
+    const taskToMove = currentColumn.tasks.find((t) => t.id === taskId);
+    if (!taskToMove) return;
+
+    // Mise à jour optimiste (même logique que le drag & drop)
+    const sourceTasks = currentColumn.tasks
+      .filter((t) => t.id !== taskId)
+      .map((t, i) => ({ ...t, position: i + 1 }));
+
+    const targetTasks = [
+      ...targetColumn.tasks,
+      {
+        ...taskToMove,
+        columnId: targetColumnId,
+      },
+    ].map((t, i) => ({ ...t, position: i + 1 }));
+
+    // Mettre à jour l'état local
+    setBoard((prev) => ({
+      ...prev,
+      columns: prev.columns.map((col) => {
+        if (col.id === currentColumnId) return { ...col, tasks: sourceTasks };
+        if (col.id === targetColumnId) return { ...col, tasks: targetTasks };
+        return col;
+      }),
+    }));
+
+    // Sauvegarder en base (réutiliser votre action existante)
+    try {
+      const result = await executeReorder({
+        type: "moveBetweenColumns",
+        boardId: board.id,
+        taskId: taskId,
+        newColumnId: targetColumnId,
+        sourceColumnTasks: sourceTasks.map((t) => ({
+          id: t.id,
+          position: t.position,
+        })),
+        destinationColumnTasks: targetTasks.map((t) => ({
+          id: t.id,
+          position: t.position,
+        })),
+      });
+
+      if (!result.data?.success) {
+        throw new Error(result.data?.error);
+      }
+    } catch (error) {
+      console.error("Move failed:", error);
+    }
+  };
+
   const columnsId = useMemo(
     () => board.columns.map((col) => col.id),
     [board.columns]
@@ -526,23 +589,27 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
               items={columnsId}
               strategy={horizontalListSortingStrategy}
             >
-              {board.columns.map((column) =>  (
-                  <ColumnView
-                    handleTaskUpdate={handleTaskUpdate}
-                    key={column.id}
-                    column={column}
-                    openFormColId={openFormColId}
-                    setOpenFormColId={setOpenFormColId}
-                    boardId={board.id}
-                    onAddTask={(content, receivedColumnId, receivedBoardId) =>
-                      handleAddTaskOptimistic(
-                        receivedColumnId,
-                        content,
-                        receivedBoardId
-                      )
-                    }
-                  />
-                ))}
+              {board.columns.map((column) => (
+                <ColumnView
+                  handleTaskUpdate={handleTaskUpdate}
+                  key={column.id}
+                  column={column}
+                  openFormColId={openFormColId}
+                  setOpenFormColId={setOpenFormColId}
+                  boardId={board.id}
+                  onAddTask={(content, receivedColumnId, receivedBoardId) =>
+                    handleAddTaskOptimistic(
+                      receivedColumnId,
+                      content,
+                      receivedBoardId
+                    )
+                  }
+                  onMoveTask={handleMoveTaskToColumn}
+                  availableColumns={board.columns.filter(
+                    (col) => col.id !== column.id
+                  )}
+                />
+              ))}
             </SortableContext>
             <AddColumnButton
               onAddColumn={(title) => handleAddColumnOptimistic(title)}
@@ -553,7 +620,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           <DragOverlay>
             {activeItem ? (
               "tasks" in activeItem ? (
-                <ColumnView
+                <ColumnOverlay
                   handleTaskUpdate={handleTaskUpdate}
                   key={activeItem.id}
                   column={activeItem as Column}
