@@ -11,9 +11,14 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Edit } from "lucide-react";
-import { useOptimistic, useRef, useState, useTransition } from "react";
+import {
+  useEffect,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { updateTaskSafeAction } from "./task.action";
-import { useRouter } from "next/navigation";
 
 interface Task {
   id: string;
@@ -26,12 +31,14 @@ export default function SortableTask({
   task,
   boardId,
   onTaskUpdate,
+  onEditStart,
+  onEditEnd,
 }: {
   task: Task;
   boardId: string;
   onTaskUpdate?: (taskId: string, newContent: string) => void;
-  onEditStart?: (taskId: string) => void;
-  onEditEnd?: (taskId: string) => void;
+  onEditStart?: () => void;
+  onEditEnd?: () => void;
 }) {
   if (!task.id) {
     console.error("SortableTask received a task without an ID!", task);
@@ -40,8 +47,14 @@ export default function SortableTask({
 
   const [taskEdited, setTaskEdited] = useState(false);
 
+  const handleEditStart = () => {
+    setTaskEdited(true);
+    onEditStart?.();
+  };
+
   const handleEditEnd = () => {
     setTaskEdited(false);
+    onEditEnd?.();
   };
 
   const {
@@ -130,7 +143,7 @@ export default function SortableTask({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={() => setTaskEdited(!taskEdited)}
+                onClick={handleEditStart}
                 variant="ghost"
                 className="size-5 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
               >
@@ -153,11 +166,7 @@ export default function SortableTask({
               handleEditEnd();
             }}
           />
-          <Button
-            type="button"
-            variant="outline"
-            onMouseDown={() => setTaskEdited(false)}
-          >
+          <Button type="button" variant="outline" onMouseDown={handleEditEnd}>
             Cancel
           </Button>
           <Button className="ml-2" onMouseDown={submit} disabled={isPending}>

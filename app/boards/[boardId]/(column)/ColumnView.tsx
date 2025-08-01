@@ -8,6 +8,8 @@ import { AddTask } from "../(task)/AddTask";
 import SortableTask from "../(task)/SortableTask";
 import { CSS } from "@dnd-kit/utilities";
 import { Column } from "@/lib/types/board";
+import { GripVertical } from "lucide-react";
+import { useState } from "react";
 
 interface ColumnViewProps {
   column: Column;
@@ -30,6 +32,8 @@ export default function ColumnView({
   boardId,
   handleTaskUpdate,
 }: ColumnViewProps) {
+  const [isEditingTask, setIsEditingTask] = useState(false);
+
   const { setNodeRef: setDroppableNodeRef } = useDroppable({
     id: column.id,
   });
@@ -48,6 +52,7 @@ export default function ColumnView({
       columnId: column.id,
       column,
     },
+    disabled: isEditingTask,
   });
 
   const mergedRef = (node: HTMLElement | null) => {
@@ -59,6 +64,7 @@ export default function ColumnView({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.3 : 1,
+    // cursor: isDragging ? "grab" : "grabbing",
   };
 
   return (
@@ -71,7 +77,8 @@ export default function ColumnView({
       className={`bg-card border border-muted rounded-xl w-[350px] flex flex-col shadow-md transition hover:shadow-lg max-h-[80vh] cursor-grab active:cursor-grabbing
       `}
     >
-      <div className="pt-4 px-4 ">
+      <div className="pt-4 px-4 flex items-center gap-2 transition-colors rounded-t-xl">
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
         <h3 className="font-semibold text-lg text-card-foreground">
           {column.title}
         </h3>
@@ -93,6 +100,8 @@ export default function ColumnView({
                   boardId={boardId}
                   key={task.id}
                   task={task}
+                  onEditStart={() => setIsEditingTask(true)}
+                  onEditEnd={() => setIsEditingTask(false)}
                 />
               ))}
           </div>
