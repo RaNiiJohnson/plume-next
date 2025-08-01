@@ -24,9 +24,9 @@ export const addBoardSafeAction = actionUser
         userId: ctx.user.id,
         columns: {
           create: [
-            { title: "To Do", position: 1 },
-            { title: "Doing", position: 2 },
-            { title: "Done", position: 3 },
+            { title: "To Do 📌", position: 1 },
+            { title: "Doing 🛠️", position: 2 },
+            { title: "Done 🏁", position: 3 },
           ],
         },
       },
