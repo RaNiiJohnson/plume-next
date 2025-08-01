@@ -49,6 +49,16 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
   const [activeItem, setActiveItem] = useState<Task | Column | null>(null);
   const [draggedItemWidth, setDraggedItemWidth] = useState<number | null>(null);
 
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
+  const handleTaskEditStart = (taskId: string) => {
+    setEditingTaskId(taskId);
+  };
+
+  const handleTaskEditEnd = () => {
+    setEditingTaskId(null);
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } })
   );
@@ -608,6 +618,9 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
                   availableColumns={board.columns.filter(
                     (col) => col.id !== column.id
                   )}
+                  editingTaskId={editingTaskId}
+                  onTaskEditStart={handleTaskEditStart}
+                  onTaskEditEnd={handleTaskEditEnd}
                 />
               ))}
             </SortableContext>

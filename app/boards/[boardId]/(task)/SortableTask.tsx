@@ -6,6 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -21,14 +22,7 @@ import {
 import { Column, Task } from "@/lib/types/board";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  ArrowRightFromLine,
-  Edit,
-  MoreHorizontal,
-  Move,
-  Save,
-  X,
-} from "lucide-react";
+import { Edit, MoreHorizontal, Save, Trash2, X } from "lucide-react";
 import { useOptimistic, useRef, useState, useTransition } from "react";
 import { updateTaskSafeAction } from "./task.action";
 
@@ -36,9 +30,6 @@ interface SortableTaskProps {
   task: Task;
   boardId: string;
   onTaskUpdate: (taskId: string, newContent: string) => void;
-  onEditStart: () => void;
-  onEditEnd: () => void;
-  // ✅ AJOUTER CES NOUVELLES PROPS
   onMoveTask?: (
     taskId: string,
     currentColumnId: string,
@@ -46,34 +37,26 @@ interface SortableTaskProps {
   ) => Promise<void>;
   availableColumns?: Column[];
   currentColumnId: string;
+  isEditing: boolean;
+  onEditStart: () => void;
+  onEditEnd: () => void;
 }
 
 export default function SortableTask({
   task,
   boardId,
   onTaskUpdate,
-  onEditStart,
-  onEditEnd,
   onMoveTask,
   availableColumns,
   currentColumnId,
+  isEditing,
+  onEditStart,
+  onEditEnd,
 }: SortableTaskProps) {
   if (!task.id) {
     console.error("SortableTask received a task without an ID!", task);
     return null;
   }
-
-  const [taskEdited, setTaskEdited] = useState(false);
-
-  const handleEditStart = () => {
-    setTaskEdited(true);
-    onEditStart?.();
-  };
-
-  const handleEditEnd = () => {
-    setTaskEdited(false);
-    onEditEnd?.();
-  };
 
   const {
     attributes,
@@ -88,8 +71,28 @@ export default function SortableTask({
       type: "task",
       task,
     },
-    disabled: taskEdited,
+    disabled: isEditing,
   });
+
+  const handleEdit = () => {
+    // Au lieu de setIsEditing(true)
+    onEditStart();
+  };
+
+  const handleSave = async (newContent: string) => {
+    try {
+      await onTaskUpdate(task.id, newContent);
+      // Au lieu de setIsEditing(false)
+      onEditEnd();
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde:", error);
+    }
+  };
+
+  const handleCancel = () => {
+    // Au lieu de setIsEditing(false)
+    onEditEnd();
+  };
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -116,6 +119,7 @@ export default function SortableTask({
     startTransition(() => {
       setOptimisticContent(newContent);
     });
+    handleCancel();
 
     // Mise à jour optimiste dans le parent (BoardView)
     onTaskUpdate?.(task.id, newContent);
@@ -129,7 +133,6 @@ export default function SortableTask({
 
       if (result.data?.success) {
         console.log("✅ Task updated successfully!");
-        handleEditEnd();
       } else {
         console.error("Failed to update task:", result.data);
         setOptimisticContent(task.content);
@@ -141,15 +144,6 @@ export default function SortableTask({
       setOptimisticContent(task.content);
       onTaskUpdate?.(task.id, task.content);
       alert("Une erreur inattendue est survenue.");
-    }
-  };
-
-  // Fonction pour gérer le déplacement
-  const handleMoveToColumn = async (targetColumnId: string) => {
-    try {
-      await onMoveTask?.(task.id, currentColumnId, targetColumnId);
-    } catch (error) {
-      console.error("Erreur lors du déplacement:", error);
     }
   };
 
@@ -165,7 +159,7 @@ export default function SortableTask({
       style={style}
       className="flex bg-background border border-muted p-3 rounded-lg shadow-sm hover:bg-accent dark:hover:bg-muted cursor-grab active:cursor-grabbing select-none group"
     >
-      {!taskEdited ? (
+      {!isEditing ? (
         <TooltipProvider>
           <span className="flex-1 text-sm font-medium ">
             {optimisticContent}
@@ -173,7 +167,7 @@ export default function SortableTask({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={handleEditStart}
+                onClick={handleEdit}
                 variant="ghost"
                 className="size-5 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
               >
@@ -195,7 +189,7 @@ export default function SortableTask({
             onKeyDown={(e) => {
               if (e.key === "Escape") {
                 e.preventDefault();
-                handleEditEnd();
+                handleEdit();
               }
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -221,7 +215,7 @@ export default function SortableTask({
               size="icon"
               onMouseDown={(e) => {
                 e.preventDefault();
-                handleEditEnd();
+                handleCancel();
               }}
               className="h-8 w-8 p-0 border-none hover:bg-destructive/10 hover:text-destructive transition"
               aria-label="Cancel"
@@ -232,16 +226,13 @@ export default function SortableTask({
             <div className="flex-1" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded">
+                <button className="p-1 rounded cursor-pointer hover:bg-primary/50 transition">
                   <MoreHorizontal size={16} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <ArrowRightFromLine size={16} className="mr-2" />
-                    Move to
-                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubTrigger>Move to</DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {availableColumns?.map((column) => (
                       <DropdownMenuItem
@@ -258,7 +249,14 @@ export default function SortableTask({
 
                 <DropdownMenuSeparator />
 
-                {/* Vos autres actions existantes (edit, delete, etc.) */}
+                <DropdownMenuSub>
+                  <DropdownMenuItem>
+                    Delete
+                    <DropdownMenuShortcut>
+                      <Trash2 />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                </DropdownMenuSub>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

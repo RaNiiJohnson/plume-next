@@ -22,12 +22,17 @@ interface ColumnViewProps {
     boardId: string
   ) => Promise<void>;
   boardId: string;
+
   onMoveTask?: (
     taskId: string,
     currentColumnId: string,
     targetColumnId: string
   ) => Promise<void>;
   availableColumns?: Column[];
+
+  editingTaskId: string | null;
+  onTaskEditStart: (taskId: string) => void;
+  onTaskEditEnd: () => void;
 }
 
 export default function ColumnView({
@@ -39,6 +44,9 @@ export default function ColumnView({
   handleTaskUpdate,
   onMoveTask,
   availableColumns,
+  editingTaskId,
+  onTaskEditStart,
+  onTaskEditEnd,
 }: ColumnViewProps) {
   const [isEditingTask, setIsEditingTask] = useState(false);
 
@@ -60,7 +68,7 @@ export default function ColumnView({
       columnId: column.id,
       column,
     },
-    disabled: isEditingTask,
+    disabled: editingTaskId !== null,
   });
 
   const mergedRef = (node: HTMLElement | null) => {
@@ -72,7 +80,6 @@ export default function ColumnView({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.3 : 1,
-    // cursor: isDragging ? "grab" : "grabbing",
   };
 
   return (
@@ -108,11 +115,12 @@ export default function ColumnView({
                   boardId={boardId}
                   key={task.id}
                   task={task}
-                  onEditStart={() => setIsEditingTask(true)}
-                  onEditEnd={() => setIsEditingTask(false)}
                   onMoveTask={onMoveTask}
                   availableColumns={availableColumns}
                   currentColumnId={column.id}
+                  isEditing={editingTaskId === task.id}
+                  onEditStart={() => onTaskEditStart(task.id)}
+                  onEditEnd={onTaskEditEnd}
                 />
               ))}
           </div>
