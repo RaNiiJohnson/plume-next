@@ -149,15 +149,18 @@ export default function SortableTask({
             defaultValue={optimisticContent}
             autoFocus
             className="text-sm font-medium w-full bg-transparent outline-none mb-2"
+            onBlur={() => {
+              handleEditEnd();
+            }}
           />
           <Button
             type="button"
             variant="outline"
-            onClick={() => setTaskEdited(false)}
+            onMouseDown={() => setTaskEdited(false)}
           >
             Cancel
           </Button>
-          <Button className="ml-2" onClick={submit} disabled={isPending}>
+          <Button className="ml-2" onMouseDown={submit} disabled={isPending}>
             Save
           </Button>
         </form>
