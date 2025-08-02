@@ -1,15 +1,8 @@
-import React from "react";
+import { Task } from "@/lib/types/type";
 
-interface Task {
-  id: string;
-  content: string;
-  position?: number;
-  columnId: string;
-}
-
-interface TaskItemProps {
+type TaskItemProps = {
   task: Task;
-}
+};
 
 export default function TaskItem({ task }: TaskItemProps) {
   return (

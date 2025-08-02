@@ -1,10 +1,9 @@
-interface TaskOverlayProps {
-  task: {
-    id: string;
-    content: string;
-  };
+import { Task } from "@/lib/types/type";
+
+type TaskOverlayProps = {
+  task: Task;
   width?: number;
-}
+};
 
 export default function TaskOverlay({ task, width }: TaskOverlayProps) {
   return (

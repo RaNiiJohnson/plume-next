@@ -16,7 +16,10 @@ import { useMemo, useState, useCallback } from "react";
 import { AddColumnButton } from "./(column)/addColumnButton";
 
 import { arrayMove } from "@dnd-kit/sortable";
-import { reorderTasksAndColumnsSafeAction } from "./(task)/task.action";
+import {
+  deleteTaskSafeAction,
+  reorderTasksAndColumnsSafeAction,
+} from "./(task)/task.action";
 
 import {
   SortableContext,
@@ -25,8 +28,11 @@ import {
 import { useAction } from "next-safe-action/hooks";
 import ColumnView from "./(column)/ColumnView";
 import TaskOverlay from "./(task)/TaskOverlay";
-import { Board, Column, Task } from "@/lib/types/board";
-import { addColumnSafeAction } from "./(column)/column.action";
+import { Board, Column, Task } from "@/lib/types/type";
+import {
+  addColumnSafeAction,
+  deleteColumnSafeAction,
+} from "./(column)/column.action";
 import { addTaskSafeAction } from "./(task)/task.action";
 import { Kanban } from "lucide-react";
 import ColumnOverlay from "./(column)/ColumnOverlay";
@@ -507,6 +513,78 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     }));
   };
 
+  const handleTaskDelete = async (taskId: string) => {
+    // 1. Mise à jour optimiste (retirer immédiatement de l'état)
+    setBoard((prevBoard) => ({
+      ...prevBoard,
+      columns: prevBoard.columns.map((col) => ({
+        ...col,
+        tasks: col.tasks.filter((task) => task.id !== taskId),
+      })),
+    }));
+
+    // 2. Supprimer de la base de données
+    try {
+      const result = await deleteTaskSafeAction({
+        taskId: taskId,
+        boardId: board.id,
+      });
+
+      if (!result.data?.success) {
+        throw new Error("Delete failed");
+      }
+
+      console.log("✅ Task deleted successfully");
+    } catch (error) {
+      console.error("❌ Delete failed:", error);
+      alert("Erreur lors de la suppression. La page va être rechargée.");
+      // window.location.reload(); // Rollback en rechargeant
+    }
+  };
+
+  const handleColumnDelete = async (columnId: string): Promise<void> => {
+    // Vérifier si la colonne a des tâches
+    const columnToDelete = board.columns.find((col) => col.id === columnId);
+    if (!columnToDelete) return;
+
+    if (columnToDelete.tasks.length > 0) {
+      const confirmDelete = confirm(
+        `This column contains ${columnToDelete.tasks.length} task${
+          columnToDelete.tasks.length > 1 ? "s" : ""
+        }. ` + ` Are you sure you want to delete it ?`
+      );
+      if (!confirmDelete) return;
+    }
+
+    // 1. Mise à jour optimiste
+    setBoard((prevBoard) => ({
+      ...prevBoard,
+      columns: prevBoard.columns
+        .filter((col) => col.id !== columnId)
+        .map((col, index) => ({
+          ...col,
+          position: index + 1, // Réorganiser les positions
+        })),
+    }));
+
+    // 2. Supprimer de la base de données
+    try {
+      const result = await deleteColumnSafeAction({
+        columnId: columnId,
+      });
+
+      if (!result.data?.success) {
+        throw new Error("Delete column failed");
+      }
+
+      console.log("✅ Column deleted successfully");
+    } catch (error) {
+      console.error("❌ Column delete failed:", error);
+      alert("Erreur lors de la suppression de la colonne.");
+      window.location.reload(); // Rollback
+    }
+  };
+
   // Fonction pour déplacer une tâche vers une autre colonne
   const handleMoveTaskToColumn = async (
     taskId: string,
@@ -602,6 +680,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
               {board.columns.map((column) => (
                 <ColumnView
                   handleTaskUpdate={handleTaskUpdate}
+                  handleTaskDelete={handleTaskDelete}
                   key={column.id}
                   column={column}
                   openFormColId={openFormColId}
@@ -621,6 +700,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
                   editingTaskId={editingTaskId}
                   onTaskEditStart={handleTaskEditStart}
                   onTaskEditEnd={handleTaskEditEnd}
+                  onDeleteColumn={handleColumnDelete}
                 />
               ))}
             </SortableContext>

@@ -19,28 +19,28 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Column, Task } from "@/lib/types/board";
+import { Column, Task } from "@/lib/types/type";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Edit, MoreHorizontal, Save, Trash2, X } from "lucide-react";
 import { useOptimistic, useRef, useState, useTransition } from "react";
 import { updateTaskSafeAction } from "./task.action";
+import { toast } from "sonner";
+import { TaskUpdateFn, MoveTaskFn, AsyncIdCallback } from "@/lib/types/shared";
 
-interface SortableTaskProps {
+type SortableTaskProps = {
   task: Task;
   boardId: string;
-  onTaskUpdate: (taskId: string, newContent: string) => void;
-  onMoveTask?: (
-    taskId: string,
-    currentColumnId: string,
-    targetColumnId: string
-  ) => Promise<void>;
-  availableColumns?: Column[];
   currentColumnId: string;
   isEditing: boolean;
+  availableColumns?: Column[];
+
+  onTaskUpdate: TaskUpdateFn;
+  onMoveTask?: MoveTaskFn;
   onEditStart: () => void;
   onEditEnd: () => void;
-}
+  onTaskDelete: AsyncIdCallback;
+};
 
 export default function SortableTask({
   task,
@@ -52,6 +52,7 @@ export default function SortableTask({
   isEditing,
   onEditStart,
   onEditEnd,
+  onTaskDelete,
 }: SortableTaskProps) {
   if (!task.id) {
     console.error("SortableTask received a task without an ID!", task);
@@ -75,22 +76,20 @@ export default function SortableTask({
   });
 
   const handleEdit = () => {
-    // Au lieu de setIsEditing(true)
     onEditStart();
   };
 
-  const handleSave = async (newContent: string) => {
-    try {
-      await onTaskUpdate(task.id, newContent);
-      // Au lieu de setIsEditing(false)
-      onEditEnd();
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde:", error);
+  const handleDelete = async () => {
+    if (confirm("Are you sure you want to delete this task?")) {
+      try {
+        await onTaskDelete(task.id);
+      } catch (error) {
+        console.error("Error while deleting:", error);
+      }
     }
   };
 
   const handleCancel = () => {
-    // Au lieu de setIsEditing(false)
     onEditEnd();
   };
 
@@ -112,7 +111,9 @@ export default function SortableTask({
     const newContent = ref.current?.value ?? "";
 
     if (newContent.trim() === "") {
-      console.error("Task content cannot be empty.");
+      toast("Task content cannot be empty.", {
+        description: "Please enter a valid task description.",
+      });
       return;
     }
 
@@ -189,7 +190,7 @@ export default function SortableTask({
             onKeyDown={(e) => {
               if (e.key === "Escape") {
                 e.preventDefault();
-                handleEdit();
+                handleCancel();
               }
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -249,14 +250,12 @@ export default function SortableTask({
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuSub>
-                  <DropdownMenuItem>
-                    Delete
-                    <DropdownMenuShortcut>
-                      <Trash2 />
-                    </DropdownMenuShortcut>
-                  </DropdownMenuItem>
-                </DropdownMenuSub>
+                <DropdownMenuItem onClick={handleDelete}>
+                  Delete
+                  <DropdownMenuShortcut>
+                    <Trash2 />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

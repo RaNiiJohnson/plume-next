@@ -1,39 +1,46 @@
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Column } from "@/lib/types/type";
+import { AsyncIdCallback, IdCallback, MoveTaskFn } from "@/lib/types/shared";
 import { useDroppable } from "@dnd-kit/core";
 import {
-  useSortable,
   SortableContext,
+  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, MoreHorizontal, Trash2 } from "lucide-react";
 import { AddTask } from "../(task)/AddTask";
 import SortableTask from "../(task)/SortableTask";
-import { CSS } from "@dnd-kit/utilities";
-import { Column } from "@/lib/types/board";
-import { GripVertical } from "lucide-react";
-import { useState } from "react";
 
-interface ColumnViewProps {
+type NullableIdCallback = (id: string | null) => void;
+
+type AddTaskFn = (
+  content: string,
+  columnId: string,
+  boardId: string
+) => Promise<void>;
+
+type ColumnViewProps = {
   column: Column;
   handleTaskUpdate: (taskId: string, newContent: string) => void;
   openFormColId: string | null;
-  setOpenFormColId: (id: string | null) => void;
-  onAddTask: (
-    content: string,
-    columnId: string,
-    boardId: string
-  ) => Promise<void>;
+  setOpenFormColId: NullableIdCallback;
+  onAddTask: AddTaskFn;
   boardId: string;
-
-  onMoveTask?: (
-    taskId: string,
-    currentColumnId: string,
-    targetColumnId: string
-  ) => Promise<void>;
+  onMoveTask?: MoveTaskFn;
   availableColumns?: Column[];
-
   editingTaskId: string | null;
-  onTaskEditStart: (taskId: string) => void;
+  onTaskEditStart: IdCallback;
   onTaskEditEnd: () => void;
-}
+  handleTaskDelete: AsyncIdCallback;
+  onDeleteColumn?: AsyncIdCallback;
+};
 
 export default function ColumnView({
   column,
@@ -47,9 +54,9 @@ export default function ColumnView({
   editingTaskId,
   onTaskEditStart,
   onTaskEditEnd,
+  handleTaskDelete,
+  onDeleteColumn,
 }: ColumnViewProps) {
-  const [isEditingTask, setIsEditingTask] = useState(false);
-
   const { setNodeRef: setDroppableNodeRef } = useDroppable({
     id: column.id,
   });
@@ -82,6 +89,12 @@ export default function ColumnView({
     opacity: isDragging ? 0.3 : 1,
   };
 
+  const handleDeleteColumn = async (): Promise<void> => {
+    if (onDeleteColumn) {
+      await onDeleteColumn(column.id);
+    }
+  };
+
   return (
     <div
       suppressHydrationWarning={true}
@@ -92,11 +105,31 @@ export default function ColumnView({
       className={`bg-card border border-muted rounded-xl w-[350px] flex flex-col shadow-md transition hover:shadow-lg max-h-[80vh] cursor-grab active:cursor-grabbing
       `}
     >
-      <div className="pt-4 px-4 flex items-center gap-2 transition-colors rounded-t-xl">
-        <GripVertical className="w-4 h-4 text-muted-foreground" />
-        <h3 className="font-semibold text-lg text-card-foreground">
-          {column.title}
-        </h3>
+      <div className="bg-card border border-muted rounded-xl w-[350px] flex flex-col">
+        <div className="pt-4 px-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+            <h3 className="font-semibold text-lg text-card-foreground">
+              {column.title}
+            </h3>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1 rounded cursor-pointer hover:bg-primary/50 transition">
+                <MoreHorizontal size={16} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={handleDeleteColumn}>
+                Delete
+                <DropdownMenuShortcut>
+                  <Trash2 />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 min-h-0 custom-scrollbar">
@@ -121,6 +154,7 @@ export default function ColumnView({
                   isEditing={editingTaskId === task.id}
                   onEditStart={() => onTaskEditStart(task.id)}
                   onEditEnd={onTaskEditEnd}
+                  onTaskDelete={handleTaskDelete}
                 />
               ))}
           </div>

@@ -1,30 +1,14 @@
 "use server";
 
-import { getUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { actionUser } from "@/lib/safe-ation";
+import { AddTaskSchema, TaskUpdate, updateTaskSchema } from "@/lib/types/task";
 import { revalidatePath } from "next/cache";
 import z from "zod";
-
-const AddTaskSchema = z.object({
-  boardId: z.string(),
-  columnId: z.string(),
-  content: z.string().min(1, { message: "Task content cannot be empty." }),
-  position: z.number().int().positive(),
-});
-interface TaskUpdate {
-  id: string;
-  position: number;
-}
 
 export const addTaskSafeAction = actionUser
   .inputSchema(AddTaskSchema)
   .action(async ({ parsedInput }) => {
-    const user = await getUser();
-    if (!user) {
-      throw new Error("You must be logged in to add a task.");
-    }
-
     const newTask = await prisma.task.create({
       data: {
         columnId: parsedInput.columnId,
@@ -80,13 +64,7 @@ export const deleteTaskSafeAction = actionUser
   });
 
 export const updateTaskSafeAction = actionUser
-  .inputSchema(
-    z.object({
-      taskId: z.string(),
-      content: z.string(),
-      boardId: z.string(),
-    })
-  )
+  .inputSchema(updateTaskSchema)
   .action(async ({ parsedInput }) => {
     const updatedTask = await prisma.task.update({
       where: { id: parsedInput.taskId },
@@ -121,13 +99,13 @@ const ReorderPayloadSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("reorderColumns"), // <-- Nouveau type pour les colonnes
     boardId: z.string(),
-    columns: z.array(z.object({ id: z.string(), position: z.number() })), // Les données que tu envoies pour les colonnes
+    columns: z.array(z.object({ id: z.string(), position: z.number() })), // Les données qu'on envoie pour les colonnes
   }),
 ]);
 
 export const reorderTasksAndColumnsSafeAction = actionUser
   .inputSchema(ReorderPayloadSchema)
-  .action(async ({ parsedInput, ctx }) => {
+  .action(async ({ parsedInput }) => {
     console.log("📥 Received reorder request:", parsedInput);
 
     try {
