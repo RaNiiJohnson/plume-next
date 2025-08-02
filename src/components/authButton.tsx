@@ -10,6 +10,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
@@ -31,7 +33,7 @@ export default async function AuthButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer hover:bg-accent/60 hover:shadow transition">
+        <div className="flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition">
           <Avatar className="h-7 w-7">
             <AvatarImage
               src={user.image ?? undefined}
@@ -39,25 +41,38 @@ export default async function AuthButton() {
             />
             <AvatarFallback>{user.name?.[0] ?? "?"}</AvatarFallback>
           </Avatar>
-          <span className="font-medium text-sm max-w-[120px] truncate">
+          <span className="font-medium text-sm max-w-[120px] truncate text-muted-foreground group-hover:text-foreground">
             {user.name}
           </span>
-        </button>
+        </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+
+      <DropdownMenuContent
+        align="end"
+        className="w-44 border-muted bg-popover text-popover-foreground shadow-md rounded-md"
+      >
+        <DropdownMenuLabel className="text-xs text-muted-foreground px-2 py-1">
+          Account
+        </DropdownMenuLabel>
+
+        <DropdownMenuSeparator />
+
         <DropdownMenuItem asChild>
-          <form>
-            <Button
-              variant="link"
-              className="flex items-center gap-2 w-full text-sm"
+          <form className="w-full">
+            <button
+              type="submit"
               formAction={async () => {
                 "use server";
                 await auth.api.signOut({ headers: await headers() });
                 redirect("/auth/signin");
               }}
+              className="w-full flex items-center justify-between px-2 py-1.5 text-sm rounded-md hover:bg-destructive hover:text-destructive-foreground transition"
             >
-              <LogOut className="size-4" /> Logout
-            </Button>
+              <span className="flex items-center gap-2">
+                <LogOut className="size-4" />
+                Logout
+              </span>
+            </button>
           </form>
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AuthButton from "./authButton";
 import { ThemeToggle } from "./theme-toggle";
+import { Bell } from "lucide-react";
 
 export default function Header() {
   return (
@@ -13,8 +14,9 @@ export default function Header() {
           Plume
         </Link>
         <span className="flex-1" />
-        <ThemeToggle />
         <AuthButton />
+        <Bell size={18} />
+        <ThemeToggle />
       </div>
     </header>
   );
