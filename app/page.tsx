@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getUser } from "@/lib/auth-server";
+import prisma from "@/lib/prisma";
 import { Kanban, Rocket } from "lucide-react";
 import Link from "next/link";
 
@@ -26,101 +27,109 @@ const activeUsers = [
     initials: "DK",
     role: "Team Lead",
   },
-  {
-    name: "Sophie Laurent",
-    avatar:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=40&h=40&fit=crop&crop=face",
-    initials: "SL",
-    role: "Marketing",
-  },
-  {
-    name: "Elena Rodriguez",
-    avatar:
-      "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=40&h=40&fit=crop&crop=face",
-    initials: "ER",
-    role: "Designer",
-  },
 ];
 
 export default async function Home() {
+  const allUsers = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      image: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
   const user = await getUser();
+  const visibleUsers = allUsers.slice(0, 3);
+  const remainingCount = allUsers.length - visibleUsers.length;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center gap-12">
-      <div className="flex flex-col items-center gap-6">
-        <div className="relative">
-          <Kanban className="w-16 h-16 text-primary" />
+    <div className="flex flex-col items-center justify-center w-full max-w-6xl mx-auto px-4 py-8">
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center gap-12">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <Kanban className="w-16 h-16 text-primary" />
+          </div>
+
+          <h1 className="text-3xl font-semibold italic tracking-tight max-w-4xl">
+            Plume helps you organize your projects, collaborate with your team,
+            and turn small steps into big achievements.
+          </h1>
         </div>
 
-        <h1 className="text-3xl font-semibold italic tracking-tight max-w-4xl">
-          Plume helps you organize your projects, collaborate with your team,
-          and turn small steps into big achievements.
-        </h1>
-      </div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="flex -space-x-2">
+              {allUsers.slice(0, 5).map((user, index) => (
+                <Avatar
+                  key={index}
+                  className="border-2 border-background w-10 h-10"
+                >
+                  <AvatarImage
+                    src={user.image ? user.image : ""}
+                    alt={user.name}
+                  />
+                  <AvatarFallback className="text-xs font-medium">
+                    {user.name
+                      .split(" ")
+                      .map((word) => word[0])
+                      .join("")
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
 
-      <div className="flex flex-col items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="flex -space-x-2">
-            {activeUsers.map((user, index) => (
-              <Avatar
-                key={index}
-                className="border-2 border-background w-10 h-10"
-              >
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="text-xs font-medium">
-                  {user.initials}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted border-2 border-background">
-              <span className="text-xs font-medium text-muted-foreground">
-                +2k
-              </span>
+              {allUsers.length > 5 && (
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted border-2 border-background">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    +{allUsers.length - 5}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
+
+          <p className="text-sm text-muted-foreground">
+            Joined by{" "}
+            <span className="font-medium text-foreground">
+              {visibleUsers.map((user) => user.name).join(", ")}
+            </span>
+            {remainingCount > 0 && (
+              <>
+                {" "}
+                and{" "}
+                <span className="font-medium text-foreground">
+                  {remainingCount.toLocaleString()} others
+                </span>
+              </>
+            )}
+          </p>
         </div>
 
-        <p className="text-sm text-muted-foreground">
-          Rejoint par{" "}
-          <span className="font-medium text-foreground">
-            Sarah, Marcus, Elena
-          </span>{" "}
-          et <span className="font-medium text-foreground">2,147 autres</span>{" "}
-          cette semaine
-        </p>
+        {user ? (
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button asChild size="lg" className="text-base px-8">
+              <Link href="/boards">
+                <Rocket className="w-5 h-5 mr-2" />
+                View my boards
+              </Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button asChild size="lg" className="text-base px-8">
+              <Link href="/auth/signup">
+                <Rocket className="w-5 h-5 mr-2" />
+                Get started free
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" className="text-base px-8">
+              <Link href="/auth/signin">Sign in</Link>
+            </Button>
+          </div>
+        )}
       </div>
-
-      {user ? (
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button asChild size="lg" className="text-base px-8">
-            <Link href="/boards">
-              <Rocket className="w-5 h-5 mr-2" />
-              View my boards
-            </Link>
-          </Button>
-        </div>
-      ) : (
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button asChild size="lg" className="text-base px-8">
-            <Link href="/auth/signup">
-              <Rocket className="w-5 h-5 mr-2" />
-              Get started free
-            </Link>
-          </Button>
-          <Button variant="outline" size="lg" className="text-base px-8">
-            <Link href="/auth/signin">Sign in</Link>
-          </Button>
-        </div>
-      )}
-
-      {/* Message pour nouveaux utilisateurs */}
-      <div className="text-center max-w-lg">
-        <p className="text-sm text-muted-foreground">
-          ✨ <span className="font-medium">Free forever</span> • No credit card
-          required •<span className="font-medium">2 minutes</span> to set up
-        </p>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl">
         <div className="p-4 rounded-lg bg-muted/20 border-l-4 border-primary">
           <p className="text-sm italic text-muted-foreground mb-2">
