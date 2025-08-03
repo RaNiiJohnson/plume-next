@@ -12,6 +12,14 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -54,6 +62,8 @@ export default function SortableTask({
   onEditEnd,
   onTaskDelete,
 }: SortableTaskProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   if (!task.id) {
     console.error("SortableTask received a task without an ID!", task);
     return null;
@@ -80,12 +90,10 @@ export default function SortableTask({
   };
 
   const handleDelete = async () => {
-    if (confirm("Are you sure you want to delete this task?")) {
-      try {
-        await onTaskDelete(task.id);
-      } catch (error) {
-        console.error("Error while deleting:", error);
-      }
+    try {
+      await onTaskDelete(task.id);
+    } catch (error) {
+      console.error("Error while deleting:", error);
     }
   };
 
@@ -158,7 +166,7 @@ export default function SortableTask({
       {...attributes}
       {...listeners}
       style={style}
-      className="flex bg-background border border-muted p-3 rounded-lg shadow-sm hover:bg-accent dark:hover:bg-muted cursor-grab active:cursor-grabbing select-none group"
+      className="flex bg-background border border-muted p-3 rounded-lg shadow-sm hover:bg-muted cursor-grab active:cursor-grabbing select-none group"
     >
       {!isEditing ? (
         <TooltipProvider>
@@ -250,7 +258,7 @@ export default function SortableTask({
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem onClick={handleDelete}>
+                <DropdownMenuItem onSelect={() => setIsDialogOpen(true)}>
                   Delete
                   <DropdownMenuShortcut>
                     <Trash2 />
@@ -258,6 +266,23 @@ export default function SortableTask({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    Are you sure you want to delete it ?
+                  </DialogTitle>
+                </DialogHeader>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Cancel</Button>
+                  </DialogClose>
+                  <Button variant="destructive" onClick={handleDelete}>
+                    Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       )}

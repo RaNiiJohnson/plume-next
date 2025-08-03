@@ -73,7 +73,7 @@ export const AddTask = ({
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input autoFocus placeholder="Contenu de la carte" {...field} />
+                <Input autoFocus placeholder="Card content" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

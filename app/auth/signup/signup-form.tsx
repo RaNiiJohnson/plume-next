@@ -14,9 +14,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signUp } from "@/lib/auth-client";
+import { signIn, signUp } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useState } from "react";
+import { Github, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Separator } from "@/components/ui/separator";
 
 const SignupFormSchema = z.object({
   name: z.string().min(2, {
@@ -32,6 +36,8 @@ const SignupFormSchema = z.object({
 
 export function SignupForm() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
 
   const form = useForm<z.infer<typeof SignupFormSchema>>({
     resolver: zodResolver(SignupFormSchema),
@@ -42,7 +48,8 @@ export function SignupForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof SignupFormSchema>) {
+  async function onSubmit(values: z.infer<typeof SignupFormSchema>) {
+    setIsLoading(true);
     signUp.email(
       {
         name: values.name,
@@ -58,52 +65,123 @@ export function SignupForm() {
         },
       }
     );
+    setIsLoading(false);
+  }
+  type ProviderEnum = Parameters<typeof signIn.social>[0]["provider"];
+
+  async function signUpWithProvider(provider: ProviderEnum) {
+    setIsGithubLoading(true);
+    await signIn.social(
+      {
+        provider,
+        callbackURL: "/auth",
+      },
+      {
+        onSuccess: () => {},
+        onError: (error) => {
+          toast.error(error.error.message);
+        },
+      }
+    );
+    setIsGithubLoading(false);
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>name</FormLabel>
-              <FormControl>
-                <Input type="text" placeholder="john" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+    <div className="space-y-6">
+      <div className="space-y-6">
+        <Button
+          className="w-full h-11"
+          variant="outline"
+          onClick={() => signUpWithProvider("github")}
+          disabled={isGithubLoading}
+        >
+          {isGithubLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Github className="w-4 h-4" />
           )}
-        />{" "}
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>email</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="john@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />{" "}
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="*******" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">Sign Up</Button>
-      </form>
-    </Form>
+          Sign up with GitHub {/* ← Et ici */}
+        </Button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or sign up with email
+            </span>
+          </div>
+        </div>
+      </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    placeholder="Johnson "
+                    className="h-11"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="name@example.com"
+                    className="h-11"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Enter your password"
+                    className="h-11"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" className="w-full h-11" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Creating account...
+              </>
+            ) : (
+              "Create account"
+            )}
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 }

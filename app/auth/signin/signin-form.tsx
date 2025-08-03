@@ -1,5 +1,4 @@
 "use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,11 +13,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { signIn } from "@/lib/auth-client";
-import { Github } from "lucide-react";
+import { Github, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const SignInFormSchema = z.object({
   email: z.email({
@@ -33,7 +34,9 @@ type ProviderEnum = Parameters<typeof signIn.social>[0]["provider"];
 
 export function SigninForm() {
   const router = useRouter();
-  // 1. Define your form.
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
+
   const form = useForm<z.infer<typeof SignInFormSchema>>({
     resolver: zodResolver(SignInFormSchema),
     defaultValues: {
@@ -42,8 +45,8 @@ export function SigninForm() {
     },
   });
 
-  // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof SignInFormSchema>) {
+    setIsLoading(true);
     await signIn.email(
       {
         email: values.email,
@@ -59,9 +62,11 @@ export function SigninForm() {
         },
       }
     );
+    setIsLoading(false);
   }
 
   async function signInWithProvider(provider: ProviderEnum) {
+    setIsGithubLoading(true);
     await signIn.social(
       {
         provider,
@@ -74,14 +79,37 @@ export function SigninForm() {
         },
       }
     );
+    setIsGithubLoading(false);
   }
+
   return (
-    <div className="flex items-center flex-col gap-8">
+    <div className="space-y-6">
+      <Button
+        className="w-full h-11"
+        variant="outline"
+        onClick={() => signInWithProvider("github")}
+        disabled={isGithubLoading}
+      >
+        {isGithubLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Github className="w-4 h-4" />
+        )}
+        Continue with GitHub
+      </Button>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <Separator className="w-full" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with email
+          </span>
+        </div>
+      </div>
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-6 w-full"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="email"
@@ -89,7 +117,12 @@ export function SigninForm() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="" {...field} />
+                  <Input
+                    type="email"
+                    placeholder="name@example.com"
+                    className="h-11"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -100,39 +133,39 @@ export function SigninForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
-                  <div className="flex-1"></div>
                   <Link
-                    className="text-indigo-500 text-sm"
+                    className="text-sm text-primary hover:underline"
                     href="/auth/forget-password"
                   >
-                    Forget Password
+                    Forgot password?
                   </Link>
                 </div>
                 <FormControl>
-                  <Input type="password" placeholder="" {...field} />
+                  <Input
+                    type="password"
+                    placeholder="Enter your password"
+                    className="h-11"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit">Sign In</Button>
+          <Button type="submit" className="w-full h-11" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Signing in...
+              </>
+            ) : (
+              "Sign in"
+            )}
+          </Button>
         </form>
       </Form>
-      <p className="text-sm text-muted-foreground">Or</p>
-      <div className="flex w-full gap-4">
-        <Button
-          className="flex-1"
-          variant="outline"
-          onClick={() => {
-            signInWithProvider("github");
-          }}
-        >
-          <Github />
-          Sign in with github
-        </Button>
-      </div>
     </div>
   );
 }

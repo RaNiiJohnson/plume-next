@@ -43,7 +43,7 @@ export default function RootLayout({
         >
           <div className="flex flex-col h-screen max-w-[150rem] mx-auto">
             <Header />
-            <main className="flex-1 overflow-hidden">{children}</main>
+            <main className="flex-1 ">{children}</main>
           </div>
           <Toaster />
         </ThemeProvider>

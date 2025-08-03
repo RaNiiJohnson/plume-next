@@ -27,7 +27,6 @@ import {
 } from "@dnd-kit/sortable";
 import { useAction } from "next-safe-action/hooks";
 import ColumnView from "./(column)/ColumnView";
-import TaskOverlay from "./(task)/TaskOverlay";
 import { Board, Column, Task } from "@/lib/types/type";
 import {
   addColumnSafeAction,
@@ -35,7 +34,7 @@ import {
 } from "./(column)/column.action";
 import { addTaskSafeAction } from "./(task)/task.action";
 import { Kanban } from "lucide-react";
-import ColumnOverlay from "./(column)/ColumnOverlay";
+import TaskOverlay from "./(task)/TaskOverlay";
 
 export default function BoardView({ board: initialBoard }: { board: Board }) {
   const [board, setBoard] = useState<Board>(() => ({
@@ -538,7 +537,6 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     } catch (error) {
       console.error("❌ Delete failed:", error);
       alert("Erreur lors de la suppression. La page va être rechargée.");
-      // window.location.reload(); // Rollback en rechargeant
     }
   };
 
@@ -546,15 +544,6 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     // Vérifier si la colonne a des tâches
     const columnToDelete = board.columns.find((col) => col.id === columnId);
     if (!columnToDelete) return;
-
-    if (columnToDelete.tasks.length > 0) {
-      const confirmDelete = confirm(
-        `This column contains ${columnToDelete.tasks.length} task${
-          columnToDelete.tasks.length > 1 ? "s" : ""
-        }. ` + ` Are you sure you want to delete it ?`
-      );
-      if (!confirmDelete) return;
-    }
 
     // 1. Mise à jour optimiste
     setBoard((prevBoard) => ({
@@ -713,14 +702,29 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           <DragOverlay>
             {activeItem ? (
               "tasks" in activeItem ? (
-                <ColumnOverlay
+                <ColumnView
                   handleTaskUpdate={handleTaskUpdate}
+                  handleTaskDelete={handleTaskDelete}
                   key={activeItem.id}
-                  column={activeItem as Column}
+                  column={activeItem}
                   openFormColId={openFormColId}
                   setOpenFormColId={setOpenFormColId}
                   boardId={board.id}
-                  onAddTask={handleAddTaskOptimistic}
+                  onAddTask={(content, receivedColumnId, receivedBoardId) =>
+                    handleAddTaskOptimistic(
+                      receivedColumnId,
+                      content,
+                      receivedBoardId
+                    )
+                  }
+                  onMoveTask={handleMoveTaskToColumn}
+                  availableColumns={board.columns.filter(
+                    (col) => col.id !== activeItem.id
+                  )}
+                  editingTaskId={editingTaskId}
+                  onTaskEditStart={handleTaskEditStart}
+                  onTaskEditEnd={handleTaskEditEnd}
+                  onDeleteColumn={handleColumnDelete}
                 />
               ) : (
                 <TaskOverlay
