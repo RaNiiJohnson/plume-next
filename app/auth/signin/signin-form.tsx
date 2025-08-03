@@ -54,7 +54,7 @@ export function SigninForm() {
       },
       {
         onSuccess: () => {
-          router.push("/auth");
+          router.push("/");
           router.refresh();
         },
         onError: (error) => {
@@ -70,7 +70,7 @@ export function SigninForm() {
     await signIn.social(
       {
         provider,
-        callbackURL: "/auth",
+        callbackURL: "/",
       },
       {
         onSuccess: () => {},

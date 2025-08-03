@@ -58,7 +58,7 @@ export function SignupForm() {
       },
       {
         onSuccess: () => {
-          router.push("/auth");
+          router.push("/");
         },
         onError: (error) => {
           toast.error(error.error.message);
@@ -74,7 +74,7 @@ export function SignupForm() {
     await signIn.social(
       {
         provider,
-        callbackURL: "/auth",
+        callbackURL: "/",
       },
       {
         onSuccess: () => {},
@@ -100,7 +100,7 @@ export function SignupForm() {
           ) : (
             <Github className="w-4 h-4" />
           )}
-          Sign up with GitHub {/* ← Et ici */}
+          Sign up with GitHub
         </Button>
 
         <div className="relative">
