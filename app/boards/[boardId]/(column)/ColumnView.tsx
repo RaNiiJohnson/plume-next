@@ -292,11 +292,6 @@ export default function ColumnView({
           <div className="flex flex-col gap-3">
             {taskCount === 0 ? (
               <div className="flex flex-col items-center justify-center p-2 text-center">
-                <div
-                  className={`p-3 rounded-full mb-3 ${columnStyle.headerBg}`}
-                >
-                  {columnStyle.icon}
-                </div>
                 <p className="text-sm font-medium text-muted-foreground mb-1">
                   No tasks
                 </p>
