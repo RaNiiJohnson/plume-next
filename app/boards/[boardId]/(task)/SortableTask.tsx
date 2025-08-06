@@ -246,9 +246,10 @@ export default function SortableTask({
                     {availableColumns?.map((column) => (
                       <DropdownMenuItem
                         key={column.id}
-                        onClick={() =>
-                          onMoveTask?.(task.id, currentColumnId, column.id)
-                        }
+                        onClick={() => {
+                          onMoveTask?.(task.id, currentColumnId, column.id);
+                          handleCancel();
+                        }}
                       >
                         {column.title}
                       </DropdownMenuItem>
