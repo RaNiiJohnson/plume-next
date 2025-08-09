@@ -26,26 +26,29 @@ model User {
   accounts      Account[]
   boards        Board[]
 
+  members     Member[]
+  invitations Invitation[]
+
   @@unique([email])
   @@map("user")
 }
 
 model Board {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   title     String
   columns   Column[]
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
   userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Column {
-  id        String   @id @default(cuid())
-  title     String
-  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  boardId   String
-  tasks     Task[]
-  position  Int
+  id       String @id @default(cuid())
+  title    String
+  board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId  String
+  tasks    Task[]
+  position Int
 }
 
 model Task {
@@ -57,7 +60,6 @@ model Task {
   createdAt DateTime @default(now())
 }
 
-
 model Session {
   id        String   @id
   expiresAt DateTime
@@ -68,6 +70,8 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  activeOrganizationId String?
 
   @@unique([token])
   @@map("session")
@@ -103,3 +107,42 @@ model Verification {
   @@map("verification")
 }
 
+model Organization {
+  id          String       @id
+  name        String
+  slug        String?
+  logo        String?
+  createdAt   DateTime
+  metadata    String?
+  members     Member[]
+  invitations Invitation[]
+
+  @@unique([slug])
+  @@map("organization")
+}
+
+model Member {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           String
+  createdAt      DateTime
+
+  @@map("member")
+}
+
+model Invitation {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String?
+  status         String
+  expiresAt      DateTime
+  inviterId      String
+  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@map("invitation")
+}
