@@ -70,7 +70,7 @@ export function SigninForm() {
     await signIn.social(
       {
         provider,
-        callbackURL: "/",
+        callbackURL: "/auth/callback",
       },
       {
         onSuccess: () => {},

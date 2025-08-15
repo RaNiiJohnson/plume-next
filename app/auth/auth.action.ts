@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { getSession } from "@/lib/auth-server";
+import { getUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { headers } from "next/headers";
 
@@ -32,23 +32,36 @@ async function generateDefaultOrgDetails(name: string) {
   return { displayName, slug };
 }
 
-export const createDefaultOrg = async (name: string) => {
-  const session = await getSession();
+export const createDefaultOrg = async () => {
+  const user = await getUser();
+  if (!user?.id) throw new Error("No user session found");
 
-  if (!session?.user?.id) {
-    throw new Error("No user session found");
+  const existingMembership = await prisma.member.findFirst({
+    where: {
+      userId: user.id,
+    },
+    include: {
+      organization: true,
+    },
+  });
+
+  if (existingMembership) {
+    console.log("no creation necessary");
+    return existingMembership.organization;
   }
 
-  const userId = session.user.id;
-  const { displayName, slug } = await generateDefaultOrgDetails(name);
+  const { displayName, slug } = await generateDefaultOrgDetails(user.name);
 
-  await auth.api.createOrganization({
+  const org = await auth.api.createOrganization({
     body: {
       name: displayName,
       slug,
-      userId,
+      userId: user.id,
       keepCurrentActiveOrganization: false,
     },
     headers: await headers(),
   });
+
+  console.log("Organization created:", org);
+  return org;
 };

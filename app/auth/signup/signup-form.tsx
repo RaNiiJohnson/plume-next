@@ -14,14 +14,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signIn, signUp } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { useState } from "react";
-import { Github, Loader2 } from "lucide-react";
-import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
-import { createDefaultOrg } from "./signup.action";
+import { signIn, signUp } from "@/lib/auth-client";
+import { Github, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const SignupFormSchema = z.object({
   name: z.string().min(2, {
@@ -59,8 +57,7 @@ export function SignupForm() {
       },
       {
         onSuccess: async () => {
-          await createDefaultOrg(values.name);
-          router.push("/");
+          router.push("/auth/callback");
         },
         onError: (error) => {
           toast.error(error.error.message);
@@ -76,10 +73,9 @@ export function SignupForm() {
     await signIn.social(
       {
         provider,
-        callbackURL: "/",
+        callbackURL: "/auth/callback",
       },
       {
-        onSuccess: () => {},
         onError: (error) => {
           toast.error(error.error.message);
         },

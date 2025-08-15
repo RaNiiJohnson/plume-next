@@ -19,9 +19,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { OrganizationSwitcher } from "@/components/organization-switcher";
+import { getOrganizations } from "@/lib/server/organizations";
 
 export default async function Home() {
   const user = await getUser();
+  const organizations = await getOrganizations();
 
   // Récupérer les boards avec leurs statistiques
   const boards = await prisma.board.findMany({
@@ -116,7 +119,9 @@ export default async function Home() {
         {/* Header avec statistiques globales */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">My Boards</h1>
+            <h1 className="text-2xl font-bold">
+              My Boards <OrganizationSwitcher organizations={organizations} />
+            </h1>
             <p className="text-muted-foreground">
               {boards.length} active{" "}
               {boards.length === 1 ? "project" : "projects"}
