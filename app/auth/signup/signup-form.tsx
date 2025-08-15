@@ -21,6 +21,7 @@ import { useState } from "react";
 import { Github, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import { createDefaultOrg } from "./signup.action";
 
 const SignupFormSchema = z.object({
   name: z.string().min(2, {
@@ -57,7 +58,8 @@ export function SignupForm() {
         password: values.password,
       },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          await createDefaultOrg(values.name);
           router.push("/");
         },
         onError: (error) => {
