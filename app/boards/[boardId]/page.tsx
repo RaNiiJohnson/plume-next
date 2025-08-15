@@ -12,7 +12,7 @@ export default async function Home(props: Pageprops) {
   const params = await props.params;
 
   const board = await prisma.board.findUnique({
-    where: { id: params.boardId }, // <-- Ici, `params.boardId` est maintenant sûr à utiliser
+    where: { id: params.boardId },
     include: {
       columns: {
         orderBy: { position: "asc" },
