@@ -20,7 +20,7 @@ export const getUser = async () => {
   const session = await getSession();
 
   if (!session) {
-    return;
+    redirect("/auth/signup");
   }
 
   return session.user;

@@ -19,15 +19,23 @@ const BoardFormSchema = z.object({
   title: z.string().min(2, {
     message: "title must be at least 2 characters.",
   }),
+  organizationId: z.string(),
 });
 
-export const BoardForm = ({ onSuccess }: { onSuccess?: () => void }) => {
+export const BoardForm = ({
+  onSuccess,
+  organizationId,
+}: {
+  onSuccess?: () => void;
+  organizationId: string;
+}) => {
   const router = useRouter();
   // 1. Define your form.
   const form = useForm<z.infer<typeof BoardFormSchema>>({
     resolver: zodResolver(BoardFormSchema),
     defaultValues: {
       title: "",
+      organizationId,
     },
   });
 
@@ -37,7 +45,7 @@ export const BoardForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   async function onSubmit(values: z.infer<typeof BoardFormSchema>) {
     const board = await executeAsync(values);
     form.reset();
-    router.push(`/boards/${board.data?.id}`);
+    // router.push(`/workspace/${organizationId}/${board.data?.id}`);
     onSuccess?.();
   }
 

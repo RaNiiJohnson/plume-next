@@ -9,6 +9,7 @@ import z from "zod";
 
 const BoardFormSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
+  organizationId: z.string(),
 });
 
 const UpdateBoardSchema = z.object({
@@ -19,13 +20,12 @@ const UpdateBoardSchema = z.object({
 export const addBoardSafeAction = actionUser
   .inputSchema(BoardFormSchema)
   .action(async ({ parsedInput: Input, ctx }) => {
-    const session = await getSession();
 
     const newBoard = await prisma.board.create({
       data: {
         title: Input.title,
         userId: ctx.user.id,
-        organizationId: session?.session.activeOrganizationId,
+        organizationId: Input.organizationId,
         columns: {
           create: [
             { title: "To Do 📌", position: 1 },

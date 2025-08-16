@@ -12,7 +12,11 @@ import { Plus } from "lucide-react";
 import { BoardForm } from "./board-form";
 import { useState } from "react";
 
-export function AddBoardButton() {
+export const AddBoardButton = ({
+  organizationId,
+}: {
+  organizationId: string;
+}) => {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -29,8 +33,11 @@ export function AddBoardButton() {
           <DialogTitle>Create a new board</DialogTitle>
         </DialogHeader>
 
-        <BoardForm onSuccess={() => setOpen(false)} />
+        <BoardForm
+          onSuccess={() => setOpen(false)}
+          organizationId={organizationId}
+        />
       </DialogContent>
     </Dialog>
   );
-}
+};

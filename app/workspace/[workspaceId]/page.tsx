@@ -21,56 +21,31 @@ import { AddBoardButton } from "./addBoardButton";
 import { deleteBoardAction } from "./board.action";
 import { ActiveOrgView } from "./orgActiveView";
 
-export default async function Home() {
+type Pageprops = {
+  params: Promise<{ workspaceId: string }>;
+};
+
+export default async function OrgBoardsPage(props: Pageprops) {
+  const params = await props.params;
   const session = await getSession();
   const organizations = await getOrganizations();
 
-  let activeOrganizationId = session.session.activeOrganizationId;
+  // let activeOrganizationId = session.session.activeOrganizationId;
 
-  if (!activeOrganizationId && organizations.length > 0) {
-    activeOrganizationId = organizations[0].id;
+  // if (!activeOrganizationId && organizations.length > 0) {
+  //   activeOrganizationId = organizations[0].id;
 
-    prisma.session
-      .update({
-        where: { id: session.session.id },
-        data: { activeOrganizationId: organizations[0].id },
-      })
-      .catch(console.error);
-  }
-
-  if (!activeOrganizationId) {
-    return (
-      <SecondPageLayout>
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="flex items-center gap-3 text-2xl font-bold">
-                My Boards <OrganizationSwitcher organizations={organizations} />
-                <ActiveOrgView />
-              </h1>
-            </div>
-          </div>
-
-          <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-              <Users className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">
-              No organization selected
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Please select or create an organization to view your boards
-            </p>
-          </div>
-        </div>
-      </SecondPageLayout>
-    );
-  }
-
+  //   prisma.session
+  //     .update({
+  //       where: { id: session.session.id },
+  //       data: { activeOrganizationId: organizations[0].id },
+  //     })
+  //     .catch(console.error);
+  // }
   const boards = await prisma.board.findMany({
     where: {
       userId: session.user.id,
-      organizationId: activeOrganizationId,
+      organizationId: params.workspaceId,
     },
     include: {
       columns: {
@@ -157,7 +132,8 @@ export default async function Home() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="flex items-center gap-3 text-2xl font-bold">
-              My Boards <OrganizationSwitcher organizations={organizations} />
+              My Boards
+              <OrganizationSwitcher organizations={organizations} />
               <ActiveOrgView />
             </h1>
             <p className="text-muted-foreground">
@@ -335,7 +311,7 @@ export default async function Home() {
             );
           })}
 
-          <AddBoardButton />
+          <AddBoardButton organizationId={params.workspaceId} />
         </div>
 
         {/* Empty state */}

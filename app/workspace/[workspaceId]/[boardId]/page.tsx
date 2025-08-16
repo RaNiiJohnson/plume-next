@@ -7,7 +7,7 @@ type Pageprops = {
   params: Promise<{ boardId: string }>;
 };
 
-export default async function Home(props: Pageprops) {
+export default async function Page(props: Pageprops) {
   const user = await getUser();
   const params = await props.params;
 
