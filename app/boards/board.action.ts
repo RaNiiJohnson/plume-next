@@ -1,6 +1,7 @@
 "use server";
 
 import { authClient } from "@/lib/auth-client";
+import { getSession } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { actionUser } from "@/lib/safe-ation";
 import { revalidatePath } from "next/cache";
@@ -18,16 +19,13 @@ const UpdateBoardSchema = z.object({
 export const addBoardSafeAction = actionUser
   .inputSchema(BoardFormSchema)
   .action(async ({ parsedInput: Input, ctx }) => {
-    const organisation = await authClient.organization.create({
-      name: `${Input.title} Organization`,
-      slug: Input.title.toLowerCase().replace(/\s+/g, "-"),
-    });
+    const session = await getSession();
 
     const newBoard = await prisma.board.create({
       data: {
         title: Input.title,
         userId: ctx.user.id,
-        // organizationId: organisation.slug,
+        organizationId: session?.session.activeOrganizationId,
         columns: {
           create: [
             { title: "To Do 📌", position: 1 },

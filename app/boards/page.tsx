@@ -1,35 +1,76 @@
 import { SecondPageLayout } from "@/components/layout";
-import { getUser } from "@/lib/auth-server";
-import prisma from "@/lib/prisma";
-import Link from "next/link";
-import { AddBoardButton } from "./addBoardButton";
-import { Trash2, Clock, CheckCircle2, Circle, Users } from "lucide-react";
-import { unauthorized } from "next/navigation";
-import { deleteBoardAction } from "./board.action";
-import { revalidatePath } from "next/cache";
+import { OrganizationSwitcher } from "@/components/organization-switcher";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { OrganizationSwitcher } from "@/components/organization-switcher";
+import { getSession } from "@/lib/auth-server";
+import prisma from "@/lib/prisma";
 import { getOrganizations } from "@/lib/server/organizations";
+import { CheckCircle2, Circle, Clock, Trash2, Users } from "lucide-react";
+import { revalidatePath } from "next/cache";
+import Link from "next/link";
+import { AddBoardButton } from "./addBoardButton";
+import { deleteBoardAction } from "./board.action";
+import { ActiveOrgView } from "./orgActiveView";
 
 export default async function Home() {
-  const user = await getUser();
+  const session = await getSession();
   const organizations = await getOrganizations();
 
-  // Récupérer les boards avec leurs statistiques
+  let activeOrganizationId = session.session.activeOrganizationId;
+
+  if (!activeOrganizationId && organizations.length > 0) {
+    activeOrganizationId = organizations[0].id;
+
+    prisma.session
+      .update({
+        where: { id: session.session.id },
+        data: { activeOrganizationId: organizations[0].id },
+      })
+      .catch(console.error);
+  }
+
+  if (!activeOrganizationId) {
+    return (
+      <SecondPageLayout>
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="flex items-center gap-3 text-2xl font-bold">
+                My Boards <OrganizationSwitcher organizations={organizations} />
+                <ActiveOrgView />
+              </h1>
+            </div>
+          </div>
+
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+              <Users className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">
+              No organization selected
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Please select or create an organization to view your boards
+            </p>
+          </div>
+        </div>
+      </SecondPageLayout>
+    );
+  }
+
   const boards = await prisma.board.findMany({
     where: {
-      userId: user?.id,
+      userId: session.user.id,
+      organizationId: activeOrganizationId,
     },
     include: {
       columns: {
@@ -52,10 +93,6 @@ export default async function Home() {
       createdAt: "desc",
     },
   });
-
-  if (!user) {
-    return unauthorized();
-  }
 
   // Fonction pour calculer les stats d'un board
   const getBoardStats = (board: any) => {
@@ -119,8 +156,9 @@ export default async function Home() {
         {/* Header avec statistiques globales */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="flex items-center gap-3 text-2xl font-bold">
               My Boards <OrganizationSwitcher organizations={organizations} />
+              <ActiveOrgView />
             </h1>
             <p className="text-muted-foreground">
               {boards.length} active{" "}

@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getUser } from "@/lib/auth-server";
+import { getSession, getUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { Kanban, Rocket } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +30,7 @@ const activeUsers = [
 ];
 
 export default async function Home() {
+  const session = await getSession();
   const allUsers = await prisma.user.findMany({
     select: {
       id: true,
@@ -110,7 +111,7 @@ export default async function Home() {
         {user ? (
           <div className="flex flex-col sm:flex-row gap-4">
             <Button asChild size="lg" className="text-base px-8">
-              <Link href="/boards">
+              <Link href={`boards/${session.session.activeOrganizationId}`}>
                 <Rocket className="w-5 h-5 mr-2" />
                 View my boards
               </Link>

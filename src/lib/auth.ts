@@ -1,3 +1,4 @@
+import { getActiveOrganization } from "./server/organizations";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./prisma";
@@ -20,6 +21,21 @@ export const auth = betterAuth({
       clientId: process.env.FACEBOOK_CLIENT_ID as string,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
       scopes: ["email", "public_profile"],
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          const organization = await getActiveOrganization(session.userId);
+          return {
+            data: {
+              ...session,
+              activeOrganizationId: organization.id,
+            },
+          };
+        },
+      },
     },
   },
 });

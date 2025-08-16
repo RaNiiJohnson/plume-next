@@ -26,7 +26,7 @@ async function generateDefaultOrgDetails(name: string) {
   const fallback = "user";
   const baseName = name?.includes("@") ? name.split("@")[0] : name || fallback;
 
-  const displayName = `${baseName}'s Organization`;
+  const displayName = `${baseName}'s workspace`;
   const slug = await generateUniqueOrgSlug(baseName);
 
   return { displayName, slug };

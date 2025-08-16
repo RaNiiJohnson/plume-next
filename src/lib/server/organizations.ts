@@ -28,3 +28,23 @@ export const getOrganizations = async () => {
 
   return organizations;
 };
+
+export const getActiveOrganization = async (userId: string) => {
+  const member = await prisma.member.findFirst({
+    where: {
+      userId: userId,
+    },
+    include: {
+      organization: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  if (!member?.organization) {
+    throw new Error("Aucune organisation trouvée pour cet utilisateur");
+  }
+
+  return member.organization;
+};
