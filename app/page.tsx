@@ -114,7 +114,10 @@ export default async function Home() {
         {user ? (
           <div className="flex flex-wrap gap-3 justify-center">
             {organizations.map((organization) => (
-              <WorkspaceLinks organization={organization} />
+              <WorkspaceLinks
+                organization={organization}
+                key={organization.id}
+              />
             ))}
           </div>
         ) : (
