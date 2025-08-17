@@ -48,10 +48,6 @@ export default async function Home() {
   const visibleUsers = allUsers.slice(0, 3);
   const remainingCount = allUsers.length - visibleUsers.length;
 
-  const handleActiveWorkspace = async (organizationId: string) => {
-    await setActiveWspace(organizationId);
-  };
-
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-6xl mx-auto px-4 py-8">
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-center gap-12">
@@ -116,7 +112,11 @@ export default async function Home() {
         </div>
 
         {user ? (
-          <WorkspaceLinks organizations={organizations} />
+          <div className="flex flex-wrap gap-3 justify-center">
+            {organizations.map((organization) => (
+              <WorkspaceLinks organization={organization} />
+            ))}
+          </div>
         ) : (
           <div className="flex flex-col sm:flex-row gap-4">
             <Button asChild size="lg" className="text-base px-8">
