@@ -1,8 +1,9 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Check, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
+import { SidebarMenuSubButton } from "./ui/sidebar";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -16,5 +17,28 @@ export function ThemeToggle() {
       <Moon className="hidden w-5 h-5 dark:block" />
       <span className="sr-only">Toggle theme</span>
     </Button>
+  );
+}
+export function ThemeToggleDark() {
+  const { theme, setTheme } = useTheme();
+  return (
+    <SidebarMenuSubButton
+      className="cursor-pointer"
+      onClick={() => setTheme("dark")}
+    >
+      <Moon /> <span>Dark</span>
+      <Check className="hidden dark:block" />
+    </SidebarMenuSubButton>
+  );
+}
+export function ThemeToggleLight() {
+  const { theme, setTheme } = useTheme();
+  return (
+    <SidebarMenuSubButton
+      className="cursor-pointer"
+      onClick={() => setTheme("light")}
+    >
+      <Sun /> <span>Light</span> <Check className="dark:hidden" />
+    </SidebarMenuSubButton>
   );
 }

@@ -2,6 +2,10 @@
 import { LampDesk } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { setActiveWspace } from "./workspace.action";
+import {
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+} from "@/components/ui/sidebar";
 
 type Organization = {
   id: string;
@@ -17,14 +21,12 @@ export function WorkspaceLinks({
 
   return (
     <button
-      key={organization.id}
       onClick={async () => {
         try {
           await setActiveWspace(organization.id);
           router.push(`workspace/${organization.id}`);
-          console.log(organization.id);
         } catch (error) {
-          console.log(error);
+          console.error(error);
         }
       }}
       className="group relative overflow-hidden rounded-lg border bg-card p-4 transition-all hover:shadow-md hover:border-primary/50 cursor-pointer"
@@ -41,5 +43,32 @@ export function WorkspaceLinks({
         </div>
       </div>
     </button>
+  );
+}
+
+export function WorkspaceLinksSidebar({
+  organization,
+}: {
+  organization: Organization;
+}) {
+  const router = useRouter();
+
+  return (
+    <SidebarMenuSubItem
+      onClick={async () => {
+        try {
+          await setActiveWspace(organization.id);
+          router.push(`/workspace/${organization.id}`);
+        } catch (error) {
+          console.error(error);
+        }
+      }}
+      key={organization.id}
+      className="cursor-pointer"
+    >
+      <SidebarMenuSubButton asChild>
+        <span>{organization.name}</span>
+      </SidebarMenuSubButton>
+    </SidebarMenuSubItem>
   );
 }

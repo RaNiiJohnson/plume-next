@@ -11,7 +11,9 @@ export const PageLayout = (props: PropsWithChildren) => {
 export const SecondPageLayout = (props: PropsWithChildren) => {
   return (
     <div className="mx-auto h-full flex flex-col bg-background/80">
-      <div className="p-4 flex-1 flex flex-col">{props.children}</div>
+      <div className="p-4 border-t-3 border-primary flex-1 flex flex-col">
+        {props.children}
+      </div>
     </div>
   );
 };
