@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import clsx from "clsx";
 import { cn } from "@/lib/utils";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,10 +43,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex flex-col h-screen max-w-[150rem] mx-auto">
-            <Header />
-            <main className="flex-1 ">{children}</main>
-          </div>
+          <SidebarProvider>
+            <div className="flex flex-col h-screen w-full mx-auto">
+              <Header />
+              <main className="flex-1 px-4">{children}</main>
+            </div>
+            <SidebarTrigger />
+            <AppSidebar />
+          </SidebarProvider>
           <Toaster />
         </ThemeProvider>
       </body>

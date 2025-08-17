@@ -23,19 +23,19 @@ export const auth = betterAuth({
       scopes: ["email", "public_profile"],
     },
   },
-  databaseHooks: {
-    session: {
-      create: {
-        before: async (session) => {
-          const organization = await getActiveOrganization(session.userId);
-          return {
-            data: {
-              ...session,
-              activeOrganizationId: organization.id,
-            },
-          };
-        },
-      },
-    },
-  },
+  // databaseHooks: {
+  //   session: {
+  //     create: {
+  //       before: async (session) => {
+  //         const organization = await getActiveOrganization(session.userId);
+  //         return {
+  //           data: {
+  //             ...session,
+  //             activeOrganizationId: organization.id,
+  //           },
+  //         };
+  //       },
+  //     },
+  //   },
+  // },
 });

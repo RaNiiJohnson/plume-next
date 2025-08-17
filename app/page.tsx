@@ -1,10 +1,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getSession, getUser } from "@/lib/auth-server";
+import { getUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { getOrganizations } from "@/lib/server/organizations";
 import { Kanban, LampDesk, Rocket } from "lucide-react";
 import Link from "next/link";
+import { setActiveWspace } from "./workspace.action";
+import { WorkspaceLinks } from "./Workspace.link";
 
 const activeUsers = [
   {
@@ -31,7 +33,6 @@ const activeUsers = [
 ];
 
 export default async function Home() {
-  const session = await getSession();
   const organizations = await getOrganizations();
   const allUsers = await prisma.user.findMany({
     select: {
@@ -46,6 +47,10 @@ export default async function Home() {
   const user = await getUser();
   const visibleUsers = allUsers.slice(0, 3);
   const remainingCount = allUsers.length - visibleUsers.length;
+
+  const handleActiveWorkspace = async (organizationId: string) => {
+    await setActiveWspace(organizationId);
+  };
 
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-6xl mx-auto px-4 py-8">
@@ -111,29 +116,7 @@ export default async function Home() {
         </div>
 
         {user ? (
-          <div className="flex flex-wrap gap-3 justify-center">
-            {organizations.map((org) => (
-              <Link
-                key={org.id}
-                href={`workspace/${org.id}`}
-                className="group relative overflow-hidden rounded-lg border bg-card p-4 transition-all hover:shadow-md hover:border-primary/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    <LampDesk className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium group-hover:text-primary transition-colors">
-                      {org.name}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      Click to view boards
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <WorkspaceLinks organizations={organizations} />
         ) : (
           <div className="flex flex-col sm:flex-row gap-4">
             <Button asChild size="lg" className="text-base px-8">

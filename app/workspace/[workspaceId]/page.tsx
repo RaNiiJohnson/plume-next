@@ -133,7 +133,7 @@ export default async function OrgBoardsPage(props: Pageprops) {
           <div>
             <h1 className="flex items-center gap-3 text-2xl font-bold">
               My Boards
-              <OrganizationSwitcher organizations={organizations} />
+              {/* <OrganizationSwitcher organizations={organizations} /> */}
               <ActiveOrgView />
             </h1>
             <p className="text-muted-foreground">
