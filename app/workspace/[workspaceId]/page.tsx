@@ -20,6 +20,8 @@ import Link from "next/link";
 import { AddBoardButton } from "./addBoardButton";
 import { deleteBoardAction } from "./board.action";
 import { ActiveOrgView } from "./orgActiveView";
+import { InviteButton } from "./inviteButton";
+import { InvitationsList } from "./invitationsList";
 
 type Pageprops = {
   params: Promise<{ workspaceId: string }>;
@@ -127,7 +129,7 @@ export default async function OrgBoardsPage(props: Pageprops) {
 
   return (
     <SecondPageLayout>
-      <div className="space-y-6">
+      <div className="flex flex-col min-h-full space-y-6">
         {/* Header avec statistiques globales */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -141,6 +143,7 @@ export default async function OrgBoardsPage(props: Pageprops) {
               {boards.length === 1 ? "project" : "projects"}
             </p>
           </div>
+
           <div className="flex gap-4 text-sm">
             <div className="text-center">
               <div className="font-semibold text-lg">
@@ -162,6 +165,9 @@ export default async function OrgBoardsPage(props: Pageprops) {
             </div>
           </div>
         </div>
+
+        {/* Pending Invitations */}
+        <InvitationsList organizationId={params.workspaceId} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {boards?.map((board) => {
@@ -314,7 +320,6 @@ export default async function OrgBoardsPage(props: Pageprops) {
           <AddBoardButton organizationId={params.workspaceId} />
         </div>
 
-        {/* Empty state */}
         {boards.length === 0 && (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
@@ -326,6 +331,22 @@ export default async function OrgBoardsPage(props: Pageprops) {
             </p>
           </div>
         )}
+
+        <div className="flex-1"></div>
+
+        <div className="flex justify-center pt-8 pb-4 mt-auto">
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-6 border border-primary/20 shadow-sm">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-primary mb-2">
+                Invite Team Members
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Collaborate with your team by inviting them to this workspace
+              </p>
+            </div>
+            <InviteButton organizationId={params.workspaceId} />
+          </div>
+        </div>
       </div>
     </SecondPageLayout>
   );

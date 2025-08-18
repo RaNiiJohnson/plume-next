@@ -1,4 +1,4 @@
-import { Bell, ChevronRight, Contrast, Layers } from "lucide-react";
+import { ChevronRight, Contrast, Layers } from "lucide-react";
 
 import {
   Collapsible,
@@ -17,6 +17,7 @@ import {
 import { getOrganizations } from "@/lib/server/organizations";
 import { WorkspaceLinksSidebar } from "@app/Workspace.link";
 import { ThemeToggleDark, ThemeToggleLight } from "./theme-toggle";
+import { NotificationsMenu } from "./notifications-menu";
 
 export async function NavMain() {
   const organizations = await getOrganizations();
@@ -73,10 +74,10 @@ export async function NavMain() {
           </SidebarMenuItem>
         </Collapsible>
       </SidebarMenu>
-      <SidebarMenuButton tooltip="Notifications">
-        <Bell />
-        <span>Notifications</span>
-      </SidebarMenuButton>
+
+      <SidebarMenu>
+        <NotificationsMenu />
+      </SidebarMenu>
     </SidebarGroup>
   );
 }
