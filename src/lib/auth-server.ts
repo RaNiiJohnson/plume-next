@@ -9,19 +9,11 @@ export const getSession = async () => {
     headers: await headers(),
   });
 
-  if (!session) {
-    redirect("/auth/signup");
-  }
-
   return session;
 };
 
 export const getUser = async () => {
   const session = await getSession();
 
-  if (!session) {
-    redirect("/auth/signup");
-  }
-
-  return session.user;
+  return session?.user || null;
 };

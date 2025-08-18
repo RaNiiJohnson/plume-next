@@ -10,7 +10,7 @@ export const getOrganizations = async () => {
     where: {
       members: {
         some: {
-          userId: user.id,
+          userId: user?.id,
         },
       },
     },
