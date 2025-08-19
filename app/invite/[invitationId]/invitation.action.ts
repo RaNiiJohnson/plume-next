@@ -49,7 +49,6 @@ export async function acceptInvitationAction({
         data: { status: "accepted" },
       });
       redirect(`/workspace/${invitation.organizationId}`);
-      return;
     }
 
     await auth.api.acceptInvitation({
