@@ -65,7 +65,7 @@ export default async function NotificationsPage() {
     if (expired) return <XCircle className="w-4 h-4 text-destructive" />;
     if (status === "accepted")
       return <CheckCircle2 className="w-4 h-4 text-green-600" />;
-    if (status === "declined")
+    if (status === "declined" || "rejected")
       return <XCircle className="w-4 h-4 text-red-600" />;
     return <Mail className="w-4 h-4 text-primary" />;
   };
@@ -73,14 +73,14 @@ export default async function NotificationsPage() {
   const getStatusText = (status: string, expired: boolean) => {
     if (expired) return "Expired";
     if (status === "accepted") return "Accepted";
-    if (status === "declined") return "Declined";
+    if (status === "declined" || "rejected") return "Rejected";
     return "Pending";
   };
 
   const getStatusVariant = (status: string, expired: boolean) => {
     if (expired) return "destructive";
     if (status === "accepted") return "default";
-    if (status === "declined") return "secondary";
+    if (status === "declined" || "rejected") return "secondary";
     return "outline";
   };
 
