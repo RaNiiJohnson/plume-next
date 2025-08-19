@@ -1,7 +1,9 @@
 "use server";
 
+import { auth } from "@/lib/auth";
 import { getSession } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function acceptInvitationAction({
@@ -50,21 +52,12 @@ export async function acceptInvitationAction({
       return;
     }
 
-    // Create membership and update invitation in a transaction
-    await prisma.$transaction([
-      prisma.member.create({
-        data: {
-          id: crypto.randomUUID(),
-          userId: session.user.id,
-          organizationId: invitation.organizationId,
-          role: invitation.role || "member",
-        },
-      }),
-      prisma.invitation.update({
-        where: { id: invitationId },
-        data: { status: "accepted" },
-      }),
-    ]);
+    await auth.api.acceptInvitation({
+      body: {
+        invitationId,
+      },
+      headers: await headers(),
+    });
 
     redirect(`/workspace/${invitation.organizationId}`);
   } catch (error) {
@@ -96,13 +89,12 @@ export async function declineInvitationAction({
     if (invitation.email !== session.user.email) {
       throw new Error("Invitation email mismatch");
     }
-
-    // Update invitation status
-    await prisma.invitation.update({
-      where: { id: invitationId },
-      data: { status: "declined" },
+    await auth.api.rejectInvitation({
+      body: {
+        invitationId, // required
+      },
+      headers: await headers(),
     });
-
     redirect("/");
   } catch (error) {
     console.error("Error declining invitation:", error);
