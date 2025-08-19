@@ -5,7 +5,32 @@ import prisma from "./prisma";
 import { organization } from "better-auth/plugins";
 
 export const auth = betterAuth({
-  plugins: [organization()],
+  plugins: [
+    organization({
+      async sendInvitationEmail(data) {
+        // Construct the invitation link
+        const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/accept-invitation/${data.id}`;
+
+        console.log(`Sending invitation email to ${data.email}`);
+        console.log(`Invitation link: ${inviteLink}`);
+        console.log(
+          `Invited by: ${data.inviter.user.name} (${data.inviter.user.email})`
+        );
+        console.log(`Organization: ${data.organization.name}`);
+
+        // await sendEmail({
+        //   to: data.email,
+        //   subject: `You're invited to join ${data.organization.name}`,
+        //   html: `
+        //     <h2>You've been invited to join ${data.organization.name}</h2>
+        //     <p>${data.inviter.user.name} has invited you to join their organization.</p>
+        //     <a href="${inviteLink}">Accept Invitation</a>
+        //   `
+        // });
+      },
+      invitationExpiresIn: 7 * 24 * 60 * 60,
+    }),
+  ],
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -23,19 +48,4 @@ export const auth = betterAuth({
       scopes: ["email", "public_profile"],
     },
   },
-  // databaseHooks: {
-  //   session: {
-  //     create: {
-  //       before: async (session) => {
-  //         const organization = await getActiveOrganization(session.userId);
-  //         return {
-  //           data: {
-  //             ...session,
-  //             activeOrganizationId: organization.id,
-  //           },
-  //         };
-  //       },
-  //     },
-  //   },
-  // },
 });

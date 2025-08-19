@@ -1,5 +1,4 @@
 import Link from "next/link";
-import AuthButton from "./authButton";
 
 export default async function Header() {
   return (
@@ -12,7 +11,6 @@ export default async function Header() {
           Plume
         </Link>
         <span className="flex-1" />
-        <AuthButton />
       </div>
     </header>
   );

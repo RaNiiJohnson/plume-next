@@ -30,7 +30,7 @@ type InviteButtonProps = {
 
 export function InviteButton({ organizationId }: InviteButtonProps) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState<"member" | "admin" | "owner">("member");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -93,7 +93,12 @@ export function InviteButton({ organizationId }: InviteButtonProps) {
 
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={setRole}>
+            <Select
+              value={role}
+              onValueChange={(value) =>
+                setRole(value as "member" | "admin" | "owner")
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>

@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -64,20 +63,30 @@ export async function NotificationsMenu() {
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip="Notifications" className="cursor-pointer">
-            <div className="relative">
-              <Bell />
-              {hasNotifications && (
-                <Badge
-                  variant="destructive"
-                  className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
-                >
-                  {pendingInvitations.length}
-                </Badge>
-              )}
-            </div>
-            <span>Notifications</span>
-            {hasNotifications && (
-              <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+            {!hasNotifications ? (
+              <Link
+                href="/notifications"
+                className="flex items-center gap-2 w-full"
+              >
+                <div className="relative">
+                  <Bell size={20} />
+                </div>
+                <span>Notifications</span>
+              </Link>
+            ) : (
+              <>
+                <div className="relative">
+                  <Bell size={20} />
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
+                  >
+                    {pendingInvitations.length}
+                  </Badge>
+                </div>
+                <span>Notifications</span>
+                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </>
             )}
           </SidebarMenuButton>
         </CollapsibleTrigger>
@@ -89,36 +98,14 @@ export async function NotificationsMenu() {
                   <SidebarMenuSubButton asChild>
                     <Link
                       href={`/invite/${invitation.id}`}
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                      className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-primary"
                     >
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Users className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          Join {invitation.organization.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          Invited by {invitation.user.name}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {invitation.role}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            Expires{" "}
-                            {new Date(
-                              invitation.expiresAt
-                            ).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
+                      <Users className="w-4 h-4" />
+                      You've been invited...
                     </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               ))}
-
-              {/* View all notifications link */}
               <SidebarMenuSubItem>
                 <SidebarMenuSubButton asChild>
                   <Link

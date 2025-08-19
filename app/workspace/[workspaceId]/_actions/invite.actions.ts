@@ -77,10 +77,10 @@ export async function cancelInvitationAction({
     }
 
     const result = await auth.api.cancelInvitation({
-      headers: await headers(),
       body: {
         invitationId,
       },
+      headers: await headers(),
     });
 
     revalidatePath(`/workspace/${result?.organizationId}`);

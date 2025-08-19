@@ -1,5 +1,4 @@
 import { SecondPageLayout } from "@/components/layout";
-import { OrganizationSwitcher } from "@/components/organization-switcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,13 +16,13 @@ import { getOrganizations } from "@/lib/server/organizations";
 import { CheckCircle2, Circle, Clock, Trash2, Users } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
-import {
-  AddBoardButton,
-  ActiveOrgView,
-  InviteButton,
-  InvitationsList,
-} from "./_components";
 import { deleteBoardAction } from "./_actions";
+import {
+  ActiveOrgView,
+  AddBoardButton,
+  InvitationsList,
+  InviteButton,
+} from "./_components";
 
 type Pageprops = {
   params: Promise<{ workspaceId: string }>;
@@ -31,24 +30,10 @@ type Pageprops = {
 
 export default async function OrgBoardsPage(props: Pageprops) {
   const params = await props.params;
-  const session = await getSession();
-  const organizations = await getOrganizations();
 
-  // let activeOrganizationId = session.session.activeOrganizationId;
-
-  // if (!activeOrganizationId && organizations.length > 0) {
-  //   activeOrganizationId = organizations[0].id;
-
-  //   prisma.session
-  //     .update({
-  //       where: { id: session.session.id },
-  //       data: { activeOrganizationId: organizations[0].id },
-  //     })
-  //     .catch(console.error);
-  // }
   const boards = await prisma.board.findMany({
     where: {
-      userId: session?.user.id,
+      // userId: session?.user.id,
       organizationId: params.workspaceId,
     },
     include: {
