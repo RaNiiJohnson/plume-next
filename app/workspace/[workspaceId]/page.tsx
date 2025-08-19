@@ -17,11 +17,13 @@ import { getOrganizations } from "@/lib/server/organizations";
 import { CheckCircle2, Circle, Clock, Trash2, Users } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
-import { AddBoardButton } from "./addBoardButton";
-import { deleteBoardAction } from "./board.action";
-import { ActiveOrgView } from "./orgActiveView";
-import { InviteButton } from "./inviteButton";
-import { InvitationsList } from "./invitationsList";
+import {
+  AddBoardButton,
+  ActiveOrgView,
+  InviteButton,
+  InvitationsList,
+} from "./_components";
+import { deleteBoardAction } from "./_actions";
 
 type Pageprops = {
   params: Promise<{ workspaceId: string }>;
@@ -46,7 +48,7 @@ export default async function OrgBoardsPage(props: Pageprops) {
   // }
   const boards = await prisma.board.findMany({
     where: {
-      userId: session.user.id,
+      userId: session?.user.id,
       organizationId: params.workspaceId,
     },
     include: {

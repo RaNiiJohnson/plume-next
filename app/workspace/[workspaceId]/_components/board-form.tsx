@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { addBoardSafeAction } from "./board.action";
+import { addBoardSafeAction } from "../_actions";
 import { useRouter } from "next/navigation";
 
 const BoardFormSchema = z.object({

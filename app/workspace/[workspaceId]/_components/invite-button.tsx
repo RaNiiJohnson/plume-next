@@ -22,7 +22,7 @@ import {
 import { UserPlus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { inviteUserAction } from "./invite.action";
+import { inviteUserAction } from "../_actions";
 
 type InviteButtonProps = {
   organizationId: string;

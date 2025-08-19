@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
 import { Mail, X } from "lucide-react";
-import { cancelInvitationAction } from "./invite.action";
+import { cancelInvitationAction } from "../_actions";
 
 type InvitationsListProps = {
   organizationId: string;
