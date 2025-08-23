@@ -1,12 +1,18 @@
-import { getActiveOrganization } from "./server/organizations";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import prisma from "./prisma";
 import { organization } from "better-auth/plugins";
+import { ac, admin, member, owner } from "./permissions";
+import prisma from "./prisma";
 
 export const auth = betterAuth({
   plugins: [
     organization({
+      ac,
+      roles: {
+        owner,
+        admin,
+        member,
+      },
       async sendInvitationEmail(data) {
         // Construct the invitation link
         const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/accept-invitation/${data.id}`;
