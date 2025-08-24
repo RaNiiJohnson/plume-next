@@ -11,6 +11,25 @@ export const getOrganizations = async () => {
       members: {
         some: {
           userId: user?.id,
+          role: "owner",
+        },
+      },
+    },
+  });
+
+  return organizations;
+};
+export const getSharedOrganizations = async () => {
+  const user = await getUser();
+
+  const organizations = await prisma.organization.findMany({
+    where: {
+      members: {
+        some: {
+          userId: user?.id,
+          role: {
+            in: ["member", "admin"],
+          },
         },
       },
     },

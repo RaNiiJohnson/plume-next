@@ -1,11 +1,12 @@
 "use client";
+
 import { LampDesk } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { setActiveWspace } from "./workspace.action";
+import { setActiveWspace } from "../../app/workspace.action";
 import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 type Organization = {
   id: string;
@@ -17,18 +18,10 @@ export function WorkspaceLinks({
 }: {
   organization: Organization;
 }) {
-  const router = useRouter();
-
   return (
-    <button
-      onClick={async () => {
-        try {
-          await setActiveWspace(organization.id);
-          router.push(`workspace/${organization.id}`);
-        } catch (error) {
-          console.error(error);
-        }
-      }}
+    <Link
+      href={`/workspace/${organization.id}/boards`}
+      onClick={() => setActiveWspace(organization.id)}
       className="group relative overflow-hidden rounded-lg border bg-card p-4 transition-all hover:shadow-md hover:border-primary/50 cursor-pointer"
     >
       <div className="flex items-center gap-3">
@@ -42,7 +35,7 @@ export function WorkspaceLinks({
           <p className="text-sm text-muted-foreground">Click to view boards</p>
         </div>
       </div>
-    </button>
+    </Link>
   );
 }
 
@@ -51,23 +44,15 @@ export function WorkspaceLinksSidebar({
 }: {
   organization: Organization;
 }) {
-  const router = useRouter();
-
   return (
-    <SidebarMenuSubItem
-      onClick={async () => {
-        try {
-          await setActiveWspace(organization.id);
-          router.push(`/workspace/${organization.id}`);
-        } catch (error) {
-          console.error(error);
-        }
-      }}
-      key={organization.id}
-      className="cursor-pointer"
-    >
+    <SidebarMenuSubItem key={organization.id} className="cursor-pointer">
       <SidebarMenuSubButton asChild>
-        <span>{organization.name}</span>
+        <Link
+          href={`/workspace/${organization.id}/boards`}
+          onClick={() => setActiveWspace(organization.id)}
+        >
+          <span>{organization.name}</span>
+        </Link>
       </SidebarMenuSubButton>
     </SidebarMenuSubItem>
   );

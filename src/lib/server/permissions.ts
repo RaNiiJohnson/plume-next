@@ -1,32 +1,14 @@
-"use server";
-
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { Authpermisson } from "../types/auth-permission";
 
-export const isOwner = async () => {
-  try {
-    const { success, error } = await auth.api.hasPermission({
-      headers: await headers(),
-      body: {
-        permissions: {
-          organization: ["update", "delete"],
-        },
-      },
-    });
+export const hasPermission = async (permissions: Authpermisson) => {
+  const { success } = await auth.api.hasPermission({
+    headers: await headers(),
+    body: {
+      permissions,
+    },
+  });
 
-    if (error) {
-      return {
-        success: false,
-        error: error || "Failed to check permissions",
-      };
-    }
-
-    return success;
-  } catch (error) {
-    console.error(error);
-    return {
-      success: false,
-      error: error || "Failed to check permissions",
-    };
-  }
+  return success;
 };

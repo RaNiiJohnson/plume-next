@@ -6,7 +6,7 @@ import { getOrganizations } from "@/lib/server/organizations";
 import { Kanban, LampDesk, Rocket } from "lucide-react";
 import Link from "next/link";
 import { setActiveWspace } from "./workspace.action";
-import { WorkspaceLinks } from "./Workspace.link";
+import { WorkspaceLinks } from "../src/components/Workspace.link";
 
 const activeUsers = [
   {

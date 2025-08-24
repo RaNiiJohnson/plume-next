@@ -1,15 +1,13 @@
 import { Crown, Shield, User } from "lucide-react";
 
-// Member utility functions
-
 export const getRoleIcon = (role: string) => {
   switch (role.toLowerCase()) {
     case "admin":
-      return <Crown className="w-4 h-4 text-yellow-600" />;
+      return <Crown className="size-3 text-yellow-600" />;
     case "owner":
-      return <Shield className="w-4 h-4 text-yellow-600" />;
+      return <Shield className="size-3 text-yellow-600" />;
     default:
-      return <User className="w-4 h-4 text-primary" />;
+      return <User className="size-3 text-primary" />;
   }
 };
 

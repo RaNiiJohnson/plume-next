@@ -6,11 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { getUser } from "@/lib/auth-server";
 import { formatDate } from "@/lib/form-date";
 import prisma from "@/lib/prisma";
-import { Settings, Users } from "lucide-react";
+import { hasPermission } from "@/lib/server/permissions";
+import { Users } from "lucide-react";
+import EditWorkspace from "./edit-workspace";
 
 type SettingsPageProps = {
   params: Promise<{ workspaceId: string }>;
@@ -18,6 +19,7 @@ type SettingsPageProps = {
 
 export default async function SettingsPage({ params }: SettingsPageProps) {
   const { workspaceId } = await params;
+  const currentUser = await getUser();
 
   const organization = await prisma.organization.findUnique({
     where: { id: workspaceId },
@@ -31,12 +33,36 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
     },
   });
 
+  const members = await prisma.member.findMany({
+    where: {
+      organizationId: organization?.id,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    },
+    orderBy: [
+      { role: "asc" }, // Show admins first
+      { createdAt: "asc" }, // Then by join date
+    ],
+  });
+
+  // Get current user's role in this workspace
+  const currentUserMember = members.find((m) => m.user.id === currentUser?.id);
+  const currentUserRole = currentUserMember?.role;
+
   if (!organization) {
     return (
       <div className="text-center py-12">
-        <h1 className="text-2xl font-bold mb-2">Organization not found</h1>
+        <h1 className="text-2xl font-bold mb-2">workspace not found</h1>
         <p className="text-muted-foreground">
-          The organization you're looking for doesn't exist.
+          The workspace you're looking for doesn't exist.
         </p>
       </div>
     );
@@ -44,49 +70,18 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Organization Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Organization Settings
-          </CardTitle>
-          <CardDescription>
-            Manage your organization's basic information and settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Organization Name</Label>
-              <Input
-                id="name"
-                defaultValue={organization.name}
-                placeholder="Enter organization name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="slug">URL Slug</Label>
-              <Input
-                id="slug"
-                defaultValue={organization.slug || ""}
-                placeholder="organization-slug"
-              />
-            </div>
-          </div>
+      {/* workspace Details */}
 
-          <div className="flex justify-end">
-            <Button>Save Changes</Button>
-          </div>
-        </CardContent>
-      </Card>
+      {(await hasPermission({ workspace: ["update"] })) && (
+        <EditWorkspace organization={organization} />
+      )}
 
       {/* Organization Stats */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Organization Overview
+            Workspace Overview
           </CardTitle>
           <CardDescription>
             Key statistics about your organization
@@ -117,29 +112,32 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="border-destructive/20">
-        <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>
-            Irreversible and destructive actions
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg border border-destructive/20 bg-destructive/5">
-            <div>
-              <h4 className="font-medium text-destructive">
-                Delete Organization
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Permanently delete this organization and all its data
-              </p>
-            </div>
-            <Button variant="destructive" size="sm">
-              Delete
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {currentUserRole === "owner" &&
+        (await hasPermission({ workspace: ["delete"] })) && (
+          <Card className="border-destructive/20">
+            <CardHeader>
+              <CardTitle className="text-destructive">Danger Zone</CardTitle>
+              <CardDescription>
+                Irreversible and destructive actions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-lg border border-destructive/20 bg-destructive/5">
+                <div>
+                  <h4 className="font-medium text-destructive">
+                    Delete workspace
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Permanently delete this workspace and all its data
+                  </p>
+                </div>
+                <Button variant="destructive" size="sm">
+                  Delete
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
     </div>
   );
 }

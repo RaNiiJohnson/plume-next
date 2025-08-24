@@ -5,7 +5,6 @@ import { getSession } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-
 type InviteUserParams = {
   email: string;
   role: "member" | "admin" | "owner";
@@ -60,7 +59,7 @@ export async function inviteUserAction({
     return { success: true, invitationId: data.id };
   } catch (error) {
     console.error("Error creating invitation:", error);
-    return { success: false, error: "Failed to create invitation" };
+    return { success: false, error: "Failed to send invitation" };
   }
 }
 

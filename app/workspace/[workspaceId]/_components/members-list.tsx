@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,25 +8,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
-import prisma from "@/lib/prisma";
-import { Users } from "lucide-react";
-import { toast } from "sonner";
-import { removeMember } from "../members/member.action";
-import { hasPermission } from "@/lib/server/permissions";
+import { getUser } from "@/lib/auth-server";
 import { formatDate } from "@/lib/form-date";
-import { getRoleIcon, getInitials, MEMBER_ROLES } from "../_lib/member-utils";
+import prisma from "@/lib/prisma";
+import { hasPermission } from "@/lib/server/permissions";
+import { Users } from "lucide-react";
+import { getInitials, getRoleIcon, getRoleVariant } from "../_lib/member-utils";
+import MemberSelect from "./member-select";
+import { RemoveMemberDialog } from "./remove-member-dialog";
 
 type MembersListProps = {
   organizationId: string;
 };
 
 export async function MembersList({ organizationId }: MembersListProps) {
+  const currentUser = await getUser();
   const members = await prisma.member.findMany({
     where: {
       organizationId,
@@ -41,10 +38,13 @@ export async function MembersList({ organizationId }: MembersListProps) {
       },
     },
     orderBy: [
-      { role: "asc" }, // Show admins first
       { createdAt: "asc" }, // Then by join date
     ],
   });
+
+  // Get current user's role in this workspace
+  const currentUserMember = members.find((m) => m.user.id === currentUser?.id);
+  const currentUserRole = currentUserMember?.role;
 
   if (members.length === 0) {
     return (
@@ -85,27 +85,40 @@ export async function MembersList({ organizationId }: MembersListProps) {
                 <AvatarImage src={member.user.image || undefined} />
                 <AvatarFallback>{getInitials(member.user.name)}</AvatarFallback>
               </Avatar>
-              <div>
+              <div className="space-y-1">
                 <h3 className="flex items-center gap-2 ">
                   <span>{member.user.name}</span>
-                  <Select>
-                    <SelectTrigger size="sm">
-                      <div className="flex items-center gap-1">
-                        {getRoleIcon(member.role)}
-                        <span>{member.role}</span>
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MEMBER_ROLES.map((role) => (
-                        <SelectItem key={role} value={role}>
+                  {(() => {
+                    // Si c'est un owner → toujours Badge (pas modifiable)
+                    if (member.role === "owner") {
+                      return (
+                        <Badge variant={getRoleVariant(member.role)}>
                           <div className="flex items-center gap-1">
-                            {getRoleIcon(role)}
-                            <span>{role}</span>
+                            {getRoleIcon(member.role)}
+                            <span>{member.role}</span>
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        </Badge>
+                      );
+                    }
+
+                    // Si l'utilisateur connecté est owner ou admin → Select pour modifier les autres
+                    if (
+                      currentUserRole === "owner" ||
+                      currentUserRole === "admin"
+                    ) {
+                      return <MemberSelect member={member} />;
+                    }
+
+                    // Sinon → Badge seulement (pas de modification)
+                    return (
+                      <Badge variant={getRoleVariant(member.role)}>
+                        <div className="flex items-center gap-1">
+                          {getRoleIcon(member.role)}
+                          <span>{member.role}</span>
+                        </div>
+                      </Badge>
+                    );
+                  })()}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {member.user.email}
@@ -117,26 +130,9 @@ export async function MembersList({ organizationId }: MembersListProps) {
             </div>
             <div className="flex items-center gap-2">
               {member.role !== "owner" &&
-                member.role !== "admin" &&
-                (await hasPermission({ member: ["delete"] })) && (
-                  <form>
-                    <Button
-                      formAction={async () => {
-                        "use server";
-                        const { success, error } = await removeMember(member);
-
-                        if (!success) {
-                          toast.error(error || "Failed to remove member");
-                          return;
-                        }
-
-                        toast.success("Member removed successfully");
-                      }}
-                      variant="destructive"
-                    >
-                      Remove member
-                    </Button>
-                  </form>
+                member.user.id !== currentUser?.id &&
+                (await hasPermission({ workspace: ["delete"] })) && (
+                  <RemoveMemberDialog member={member} />
                 )}
             </div>
           </div>

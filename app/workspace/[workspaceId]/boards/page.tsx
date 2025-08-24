@@ -1,7 +1,8 @@
 import prisma from "@/lib/prisma";
-import { Users } from "lucide-react";
+import { CheckCircle2Icon, Users } from "lucide-react";
 import { AddBoardButton, BoardCard } from "../_components";
 import { calculateBoardsStats } from "../_lib/board-utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type BoardsPageProps = {
   params: Promise<{ workspaceId: string }>;
@@ -42,6 +43,7 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
     <div className="space-y-6">
       {/* Stats Summary */}
       <div className="flex items-center gap-8 text-sm text-muted-foreground">
+        <span className="flex-1"></span>
         {stats.map((stat) => (
           <div key={stat.title} className="flex items-center gap-2">
             <span>{stat.title}:</span>

@@ -100,6 +100,7 @@ model Invitation {
   status         String
   expiresAt      DateTime 
   inviterId      String
+  check          Boolean @default(false)
   user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
 
   @@map("invitation")

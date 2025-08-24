@@ -3,7 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import prisma from "@/lib/prisma";
 import { LayoutGrid, Users, Settings, Bell } from "lucide-react";
 import Link from "next/link";
-import { ActiveOrgView, WorkspaceNav } from "./_components";
+import { ActiveOrgView, InviteButton, WorkspaceNav } from "./_components";
+import { LeaveButton } from "./_components/leave-button";
+import { hasPermission } from "@/lib/server/permissions";
 
 type WorkspaceLayoutProps = {
   children: React.ReactNode;
@@ -23,10 +25,16 @@ export default async function WorkspaceLayout({
       name: true,
       _count: {
         select: {
-          members: true,
           Board: true,
         },
       },
+    },
+  });
+
+  // get members count
+  const membersCount = await prisma.member.count({
+    where: {
+      organizationId: workspaceId,
     },
   });
 
@@ -61,20 +69,16 @@ export default async function WorkspaceLayout({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">{organization.name}</h1>
-            <ActiveOrgView />
           </div>
 
           <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              <LayoutGrid className="w-4 h-4 text-muted-foreground" />
-              <span className="font-medium">{organization._count.Board}</span>
-              <span className="text-muted-foreground">boards</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Users className="w-4 h-4 text-muted-foreground" />
-              <span className="font-medium">{organization._count.members}</span>
-              <span className="text-muted-foreground">members</span>
-            </div>
+            {membersCount > 1 && (
+              <div className="flex items-center gap-1">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <span className="font-medium">{membersCount}</span>
+                <span className="text-muted-foreground">members</span>
+              </div>
+            )}
             {pendingInvitationsCount > 0 && (
               <div className="flex items-center gap-1">
                 <Bell className="w-4 h-4 text-orange-500" />
@@ -82,6 +86,13 @@ export default async function WorkspaceLayout({
                   {pendingInvitationsCount} pending
                 </Badge>
               </div>
+            )}{" "}
+            <InviteButton organizationId={workspaceId} />
+            {(await hasPermission({ workspace: ["leave"] })) && (
+              <LeaveButton
+                organizationId={workspaceId}
+                organizationName={organization.name}
+              />
             )}
           </div>
         </div>

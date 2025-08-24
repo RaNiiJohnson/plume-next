@@ -108,7 +108,6 @@ export const calculateBoardsStats = (boards: any[]) => {
         (acc, board) => acc + getBoardStats(board).totalTasks,
         0
       ),
-      gradient: "from-blue-400 to-blue-600",
     },
     {
       title: "Completed",
@@ -116,12 +115,10 @@ export const calculateBoardsStats = (boards: any[]) => {
         (acc, board) => acc + getBoardStats(board).completedTasks,
         0
       ),
-      gradient: "from-green-400 to-green-600",
     },
     {
       title: "Active Boards",
       value: boards.length,
-      gradient: "from-purple-400 to-purple-600",
     },
   ];
 };

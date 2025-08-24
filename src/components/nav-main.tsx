@@ -1,4 +1,4 @@
-import { ChevronRight, Contrast, Layers } from "lucide-react";
+import { ChevronRight, Contrast, Folder, FolderTree } from "lucide-react";
 
 import {
   Collapsible,
@@ -14,13 +14,18 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { getOrganizations } from "@/lib/server/organizations";
-import { WorkspaceLinksSidebar } from "@app/Workspace.link";
+import {
+  getOrganizations,
+  getSharedOrganizations,
+} from "@/lib/server/organizations";
+import { WorkspaceLinksSidebar } from "@/components/Workspace.link";
 import { ThemeToggleDark, ThemeToggleLight } from "./theme-toggle";
 import { NotificationsMenu } from "./notifications-menu";
 
 export async function NavMain() {
   const organizations = await getOrganizations();
+  const sharedOrganizations = await getSharedOrganizations();
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel> Dashboard</SidebarGroupLabel>
@@ -29,8 +34,8 @@ export async function NavMain() {
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
               <SidebarMenuButton tooltip="Workspaces">
-                <Layers />
-                <span>Workspaces</span>
+                <Folder />
+                <span>My workspaces</span>
                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
               </SidebarMenuButton>
             </CollapsibleTrigger>
@@ -47,6 +52,31 @@ export async function NavMain() {
           </SidebarMenuItem>
         </Collapsible>
       </SidebarMenu>
+      {sharedOrganizations.length > 0 && (
+        <SidebarMenu>
+          <Collapsible asChild className="group/collapsible">
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Workspaces">
+                  <FolderTree />
+                  <span>Joined workspaces</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {sharedOrganizations.map((organization) => (
+                    <WorkspaceLinksSidebar
+                      key={organization.id}
+                      organization={organization}
+                    />
+                  ))}
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+        </SidebarMenu>
+      )}
 
       <SidebarMenu>
         <Collapsible asChild className="group/collapsible">
