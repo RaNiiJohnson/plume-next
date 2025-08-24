@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -5,13 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { formatDate } from "@/lib/form-date";
 import prisma from "@/lib/prisma";
-import { Settings, Users, Calendar, Shield } from "lucide-react";
+import { Settings, Users } from "lucide-react";
 
 type SettingsPageProps = {
   params: Promise<{ workspaceId: string }>;
@@ -109,7 +108,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
             </div>
             <div className="text-center p-4 rounded-lg bg-muted/50">
               <div className="text-2xl font-bold text-primary">
-                {new Date(organization.createdAt).toLocaleDateString()}
+                {formatDate(organization.createdAt)}
               </div>
               <div className="text-sm text-muted-foreground">Created</div>
             </div>

@@ -1,5 +1,4 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,8 +7,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import prisma from "@/lib/prisma";
-import { Crown, Shield, User, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import { toast } from "sonner";
+import { removeMember } from "../members/member.action";
+import { hasPermission } from "@/lib/server/permissions";
+import { formatDate } from "@/lib/form-date";
+import { getRoleIcon, getInitials, MEMBER_ROLES } from "../_lib/member-utils";
 
 type MembersListProps = {
   organizationId: string;
@@ -36,37 +46,6 @@ export async function MembersList({ organizationId }: MembersListProps) {
     ],
   });
 
-  const getRoleIcon = (role: string) => {
-    switch (role.toLowerCase()) {
-      case "admin":
-        return <Crown className="w-4 h-4 text-yellow-600" />;
-      case "owner":
-        return <Shield className="w-4 h-4 text-yellow-600" />;
-      default:
-        return <User className="w-4 h-4 text-primary" />;
-    }
-  };
-
-  const getRoleVariant = (role: string) => {
-    switch (role.toLowerCase()) {
-      case "admin":
-        return "default";
-      case "owner":
-        return "default";
-      default:
-        return "secondary";
-    }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   if (members.length === 0) {
     return (
       <Card>
@@ -92,11 +71,11 @@ export async function MembersList({ organizationId }: MembersListProps) {
         </CardTitle>
         <CardDescription>
           {members.length} member{members.length === 1 ? "" : "s"} in this
-          organization
+          workspace
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {members.map((member) => (
+        {members.map(async (member) => (
           <div
             key={member.id}
             className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
@@ -107,28 +86,58 @@ export async function MembersList({ organizationId }: MembersListProps) {
                 <AvatarFallback>{getInitials(member.user.name)}</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="flex gap-2 font-medium">
+                <h3 className="flex items-center gap-2 ">
                   <span>{member.user.name}</span>
-                  <Badge
-                    variant={getRoleVariant(member.role)}
-                    className="flex items-center gap-1"
-                  >
-                    {getRoleIcon(member.role)}
-                    {member.role}
-                  </Badge>
+                  <Select>
+                    <SelectTrigger size="sm">
+                      <div className="flex items-center gap-1">
+                        {getRoleIcon(member.role)}
+                        <span>{member.role}</span>
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MEMBER_ROLES.map((role) => (
+                        <SelectItem key={role} value={role}>
+                          <div className="flex items-center gap-1">
+                            {getRoleIcon(role)}
+                            <span>{role}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {member.user.email}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Joined {new Date(member.createdAt).toLocaleDateString()}
+                <p className="text-xs text-muted-foreground/60">
+                  Joined {formatDate(member.createdAt)}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {member.role !== "owner" && member.role !== "admin" && (
-                <Button variant="destructive">Remove Member</Button>
-              )}
+              {member.role !== "owner" &&
+                member.role !== "admin" &&
+                (await hasPermission({ member: ["delete"] })) && (
+                  <form>
+                    <Button
+                      formAction={async () => {
+                        "use server";
+                        const { success, error } = await removeMember(member);
+
+                        if (!success) {
+                          toast.error(error || "Failed to remove member");
+                          return;
+                        }
+
+                        toast.success("Member removed successfully");
+                      }}
+                      variant="destructive"
+                    >
+                      Remove member
+                    </Button>
+                  </form>
+                )}
             </div>
           </div>
         ))}

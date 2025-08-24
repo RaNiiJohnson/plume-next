@@ -1,20 +1,7 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import prisma from "@/lib/prisma";
-import { CheckCircle2, Circle, Clock, Trash2, Users } from "lucide-react";
-import { revalidatePath } from "next/cache";
-import Link from "next/link";
-import { deleteBoardAction } from "../_actions";
-import { AddBoardButton } from "../_components";
+import { Users } from "lucide-react";
+import { AddBoardButton, BoardCard } from "../_components";
+import { calculateBoardsStats } from "../_lib/board-utils";
 
 type BoardsPageProps = {
   params: Promise<{ workspaceId: string }>;
@@ -49,226 +36,25 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
     },
   });
 
-  // Function to calculate board stats
-  const getBoardStats = (board: any) => {
-    const totalTasks = board.columns.reduce(
-      (acc: number, column: any) => acc + column._count.tasks,
-      0
-    );
-
-    const lastColumn = board.columns[board.columns.length - 1];
-    const completedTasks = lastColumn ? lastColumn._count.tasks : 0;
-
-    const pendingTasks = totalTasks - completedTasks;
-    const completionRate =
-      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-    let lastActivity = new Date(board.createdAt).getTime();
-
-    board.columns.forEach((column: any) => {
-      column.tasks.forEach((task: any) => {
-        const taskTime = new Date(task.createdAt).getTime();
-        if (taskTime > lastActivity) {
-          lastActivity = taskTime;
-        }
-      });
-    });
-
-    const daysSinceActivity = Math.floor(
-      (Date.now() - lastActivity) / (1000 * 60 * 60 * 24)
-    );
-
-    return {
-      totalTasks,
-      completedTasks,
-      pendingTasks,
-      completionRate,
-      daysSinceActivity,
-    };
-  };
-
-  const getActivityText = (days: number) => {
-    if (days === 0) return "Today";
-    if (days === 1) return "Yesterday";
-    if (days < 7) return `${days} days ago`;
-    if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
-    return `${Math.floor(days / 30)} months ago`;
-  };
-
-  const getProgressColor = (rate: number) => {
-    if (rate >= 80) return "bg-green-500";
-    if (rate >= 50) return "bg-yellow-500";
-    if (rate >= 20) return "bg-orange-500";
-    return "bg-red-500";
-  };
+  const stats = calculateBoardsStats(boards);
 
   return (
     <div className="space-y-6">
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-card rounded-lg p-4 border">
-          <div className="text-2xl font-bold">
-            {boards.reduce(
-              (acc, board) => acc + getBoardStats(board).totalTasks,
-              0
-            )}
+      <div className="flex items-center gap-8 text-sm text-muted-foreground">
+        {stats.map((stat) => (
+          <div key={stat.title} className="flex items-center gap-2">
+            <span>{stat.title}:</span>
+            <span className="font-semibold text-foreground">{stat.value}</span>
           </div>
-          <div className="text-sm text-muted-foreground">Total Tasks</div>
-        </div>
-        <div className="bg-card rounded-lg p-4 border">
-          <div className="text-2xl font-bold">
-            {boards.reduce(
-              (acc, board) => acc + getBoardStats(board).completedTasks,
-              0
-            )}
-          </div>
-          <div className="text-sm text-muted-foreground">Completed</div>
-        </div>
-        <div className="bg-card rounded-lg p-4 border">
-          <div className="text-2xl font-bold">{boards.length}</div>
-          <div className="text-sm text-muted-foreground">Active Boards</div>
-        </div>
+        ))}
       </div>
 
       {/* Boards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {boards?.map((board) => {
-          const stats = getBoardStats(board);
-          return (
-            <div key={board.id} className="relative group">
-              <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <Dialog>
-                  <DialogTrigger>
-                    <div
-                      className="p-2 rounded-full bg-background/80 backdrop-blur-sm border border-muted shadow hover:bg-red-50 hover:border-red-200 text-muted-foreground hover:text-destructive transition"
-                      title="Delete board"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>
-                        Are you sure to delete this board{" "}
-                        <span className="text-primary">{board.title}?</span>
-                      </DialogTitle>
-
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button variant="outline">Cancel</Button>
-                        </DialogClose>
-                        <form>
-                          <Button
-                            variant="destructive"
-                            formAction={async () => {
-                              "use server";
-                              await deleteBoardAction({ boardId: board.id });
-                              revalidatePath("");
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </form>
-                      </DialogFooter>
-                    </DialogHeader>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              {/* Board Card */}
-              <Link
-                href={`/boards/${board.id}`}
-                className="block rounded-xl bg-card text-card-foreground shadow-sm hover:shadow-md transition-all duration-200 p-6 border border-muted hover:border-primary/20 hover:bg-card/80 group h-full"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary text-lg font-bold group-hover:bg-primary group-hover:text-primary-foreground transition">
-                    {board.title[0].toUpperCase()}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold group-hover:text-primary transition truncate">
-                      {board.title}
-                    </h3>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      <span>
-                        Updated {getActivityText(stats.daysSinceActivity)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Statistics */}
-                <div className="space-y-3">
-                  {/* Progress bar */}
-                  {stats.totalTasks > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">
-                          {stats.completionRate}%
-                        </span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className={`h-full transition-all duration-300 ${getProgressColor(
-                            stats.completionRate
-                          )}`}
-                          style={{ width: `${stats.completionRate}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tasks summary */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        <span>{stats.completedTasks}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Circle className="w-4 h-4 text-muted-foreground" />
-                        <span>{stats.pendingTasks}</span>
-                      </div>
-                    </div>
-
-                    {stats.totalTasks === 0 ? (
-                      <Badge variant="secondary" className="text-xs">
-                        Empty
-                      </Badge>
-                    ) : stats.completionRate === 100 ? (
-                      <Badge variant="default" className="text-xs bg-green-600">
-                        Complete
-                      </Badge>
-                    ) : stats.daysSinceActivity === 0 ? (
-                      <Badge variant="default" className="text-xs bg-blue-600">
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-xs">
-                        In Progress
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="mt-4 pt-3 border-t border-muted">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {stats.totalTasks}{" "}
-                      {stats.totalTasks === 1 ? "task" : "tasks"}
-                    </span>
-                    <span className="text-primary font-medium group-hover:underline">
-                      Open board →
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          );
-        })}
-
+        {boards?.map((board, index) => (
+          <BoardCard key={board.id} board={board} index={index} />
+        ))}
         <AddBoardButton organizationId={workspaceId} />
       </div>
 
