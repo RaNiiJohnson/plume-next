@@ -8,7 +8,7 @@ import {
 
 const statement = {
   ...defaultStatements,
-  workspace: ["create", "update", "delete", "leave"],
+  workspace: ["create", "update", "delete", "leave", "invite"],
   member: ["create", "update", "delete"],
 } as const;
 
@@ -21,12 +21,12 @@ const member = ac.newRole({
 
 const admin = ac.newRole({
   ...adminAc.statements,
-  workspace: ["create", "update", "delete", "leave"],
+  workspace: ["create", "update", "delete", "leave", "invite"],
 });
 
 const owner = ac.newRole({
   ...ownerAc.statements,
-  workspace: ["create", "update", "delete"],
+  workspace: ["create", "update", "delete", "invite"],
 });
 
 export { member, admin, owner, ac };
