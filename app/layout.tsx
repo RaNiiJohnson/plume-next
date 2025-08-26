@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
+import { Footer } from "../components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,9 +44,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SidebarProvider>
-            <div className="flex flex-col h-screen w-full mx-auto">
+            <div className="flex flex-col h-screen w-full mx-auto ">
               <Header />
               <main className="flex-1 px-4">{children}</main>
+              <Footer />
             </div>
             <SidebarTrigger />
             <AppSidebar />
