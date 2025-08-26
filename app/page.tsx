@@ -9,7 +9,7 @@ export default async function Home() {
   const user = await getUser();
 
   return (
-    <div className="flex items-center justify-center px-6 py-12 min-h-full">
+    <div className="flex items-center justify-center px-6 py-12 min-h-screen ">
       <div className="max-w-3xl mx-auto text-center space-y-12">
         {/* Hero */}
         <div className="space-y-6">

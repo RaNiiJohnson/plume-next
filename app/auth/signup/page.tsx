@@ -5,8 +5,8 @@ import { Kanban } from "lucide-react";
 
 export default function SignupPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
-      <Card className="w-full max-w-md shadow-xl border-0 bg-white/80 backdrop-blur-sm dark:bg-slate-900/80">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-xl border-0 ">
         <CardHeader className="space-y-4 pb-8 text-center">
           <div className="flex justify-center">
             <div className="p-3 rounded-full bg-primary/10">
