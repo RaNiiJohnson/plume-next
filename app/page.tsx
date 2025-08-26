@@ -29,7 +29,6 @@ export default async function Home() {
         {/* Actions */}
         {user ? (
           <div className="space-y-8">
-            <p className="text-sm text-muted-foreground">Welcome back</p>
             {organizations.length > 0 ? (
               <div className="space-y-4">
                 <p className="text-sm font-medium">Your workspaces</p>

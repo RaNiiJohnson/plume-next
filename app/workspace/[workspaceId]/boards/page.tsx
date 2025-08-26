@@ -1,8 +1,7 @@
 import prisma from "@/lib/prisma";
-import { CheckCircle2Icon, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { AddBoardButton, BoardCard } from "../_components";
 import { calculateBoardsStats } from "../_lib/board-utils";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type BoardsPageProps = {
   params: Promise<{ workspaceId: string }>;
@@ -55,7 +54,12 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
       {/* Boards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {boards?.map((board, index) => (
-          <BoardCard key={board.id} board={board} index={index} />
+          <BoardCard
+            key={board.id}
+            board={board}
+            index={index}
+            workspaceId={workspaceId}
+          />
         ))}
         <AddBoardButton organizationId={workspaceId} />
       </div>

@@ -6,7 +6,7 @@ export default async function Header() {
       <div className="mx-auto flex items-center gap-4 px-4 py-2">
         <Link
           href="/"
-          className="text-2xl font-bold text-primary hover:opacity-80 transition"
+          className="text-2xl font-bold hover:opacity-80 transition"
         >
           Plume
         </Link>
