@@ -170,8 +170,8 @@ export const reorderTasksAndColumnsSafeAction = actionUser
       });
       console.log("✅ Transaction completed successfully");
       // Le chemin doit correspondre EXACTEMENT au chemin de la page que tu veux revalider.
-      // Par exemple, si ta page est dans app/boards/[boardId]/page.tsx, le chemin est correct.
-      revalidatePath(`/boards/${parsedInput.boardId}`);
+      // Par exemple, si ta page est dans app/workspace/[boardId]/page.tsx, le chemin est correct.
+      revalidatePath(`/workspace/${parsedInput.boardId}`);
       console.log(
         `Successfully revalidated path /boards/${parsedInput.boardId}`
       ); // Ajoute un log pour le débogage

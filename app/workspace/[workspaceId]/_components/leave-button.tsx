@@ -35,7 +35,7 @@ export function LeaveButton({
 
     try {
       await leaveWorkspace(organizationId);
-      // Redirect to dashboard or home page
+      // Redirect to ard or home page
       router.push("/");
     } catch (error) {
       toast.error("An error occurred while leaving the workspace");

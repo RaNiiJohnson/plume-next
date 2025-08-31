@@ -643,7 +643,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
   );
 
   return (
-    <ThirdPageLayout>
+    <div className="h-full flex flex-col">
       <div className="flex items-center gap-3 mb-8">
         <div className="text-3xl font-extrabold tracking-tight drop-shadow-sm">
           {board.title}
@@ -652,7 +652,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           <Kanban size={22} strokeWidth={2.2} />
         </span>
       </div>
-      <div className="flex-1 flex overflow-auto custom-scrollbar">
+      <div className="flex-1 overflow-hidden">
         <DndContext
           sensors={sensors}
           collisionDetection={pointerWithin}
@@ -661,7 +661,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          <div className="flex gap-8 items-start ">
+          <div className="flex gap-8 items-start overflow-x-auto custom-scrollbar h-full pb-4">
             <SortableContext
               items={columnsId}
               strategy={horizontalListSortingStrategy}
@@ -736,6 +736,6 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           </DragOverlay>
         </DndContext>
       </div>
-    </ThirdPageLayout>
+    </div>
   );
 }

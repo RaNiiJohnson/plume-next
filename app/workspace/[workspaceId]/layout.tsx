@@ -51,19 +51,17 @@ export default async function WorkspaceLayout({
 
   if (!organization) {
     return (
-      <SecondPageLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold mb-2">Organization not found</h1>
-          <p className="text-muted-foreground">
-            The organization you're looking for doesn't exist.
-          </p>
-        </div>
-      </SecondPageLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold mb-2">Organization not found</h1>
+        <p className="text-muted-foreground">
+          The organization you're looking for doesn't exist.
+        </p>
+      </div>
     );
   }
 
   return (
-    <SecondPageLayout>
+    <div className="border-t-3 border-primary">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -103,6 +101,6 @@ export default async function WorkspaceLayout({
         {/* Page Content */}
         {children}
       </div>
-    </SecondPageLayout>
+    </div>
   );
 }

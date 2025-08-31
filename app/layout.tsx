@@ -1,7 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -44,15 +44,17 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SidebarProvider>
-            <div className="flex flex-col h-screen w-full mx-auto ">
-              <Header />
-              <main className="flex-1 px-4">{children}</main>
-              <Footer />
+            <div className="flex h-screen w-full">
+              <SidebarInset>
+                <div className="flex flex-col h-full">
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                </div>
+              </SidebarInset>
+              <AppSidebar />
             </div>
-            <SidebarTrigger />
-            <AppSidebar />
+            <Toaster />
           </SidebarProvider>
-          <Toaster />
         </ThemeProvider>
       </body>
     </html>

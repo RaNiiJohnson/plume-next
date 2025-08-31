@@ -28,7 +28,7 @@ export async function NavMain() {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel> Dashboard</SidebarGroupLabel>
+      <SidebarGroupLabel>Plume</SidebarGroupLabel>
       <SidebarMenu>
         <Collapsible asChild defaultOpen={true} className="group/collapsible">
           <SidebarMenuItem>

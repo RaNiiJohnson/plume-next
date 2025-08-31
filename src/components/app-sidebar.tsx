@@ -22,7 +22,7 @@ export async function AppSidebar({
 }: React.ComponentProps<typeof Sidebar>) {
   const user = await getUser();
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" side="left" {...props}>
       <SidebarContent>
         <NavMain />
       </SidebarContent>
