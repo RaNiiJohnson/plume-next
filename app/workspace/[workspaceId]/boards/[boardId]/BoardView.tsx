@@ -1,10 +1,8 @@
 "use client";
 
-import { SecondPageLayout, ThirdPageLayout } from "@/components/layout";
 import {
   DndContext,
   DragEndEvent,
-  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
@@ -12,7 +10,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useMemo, useState, useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AddColumnButton } from "./(column)/addColumnButton";
 
 import { arrayMove } from "@dnd-kit/sortable";
@@ -21,19 +19,19 @@ import {
   reorderTasksAndColumnsSafeAction,
 } from "./(task)/task.action";
 
+import { Board, Column, Task } from "@/lib/types/type";
 import {
   SortableContext,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { Kanban } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import ColumnView from "./(column)/ColumnView";
-import { Board, Column, Task } from "@/lib/types/type";
 import {
   addColumnSafeAction,
   deleteColumnSafeAction,
 } from "./(column)/column.action";
+import ColumnView from "./(column)/ColumnView";
 import { addTaskSafeAction } from "./(task)/task.action";
-import { Kanban } from "lucide-react";
 import TaskOverlay from "./(task)/TaskOverlay";
 
 export default function BoardView({ board: initialBoard }: { board: Board }) {
@@ -661,7 +659,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          <div className="flex gap-8 items-start overflow-x-auto custom-scrollbar h-full pb-4">
+          <div className="flex gap-8 items-start overflow-x-auto custom-scrollbar h-full pb-4 w-full">
             <SortableContext
               items={columnsId}
               strategy={horizontalListSortingStrategy}
