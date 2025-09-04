@@ -201,7 +201,7 @@ export default function ColumnView({
       {...attributes}
       style={style}
       className={`
-        bg-card border-2 rounded-xl w-[350px] flex flex-col shadow-sm 
+        bg-card border-2 rounded-xl min-w-[300px] max-w-[300px] flex flex-col shadow-sm 
         transition-all duration-200 ease-out max-h-[80vh] cursor-grab active:cursor-grabbing
         hover:shadow-md hover:scale-[1.02]
         ${columnStyle.borderColor}

@@ -31,7 +31,7 @@ export function BoardCard({ board, index, workspaceId }: BoardCardProps) {
   const colorTheme = getBoardColor(index);
 
   return (
-    <div className="group">
+    <div className="group relative">
       <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <Dialog>
           <DialogTrigger>

@@ -1,11 +1,15 @@
-import { SecondPageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
 import prisma from "@/lib/prisma";
-import { LayoutGrid, Users, Settings, Bell } from "lucide-react";
-import Link from "next/link";
-import { ActiveOrgView, InviteButton, WorkspaceNav } from "./_components";
-import { LeaveButton } from "./_components/leave-button";
 import { hasPermission } from "@/lib/server/permissions";
+import { Bell, Users } from "lucide-react";
+import { InviteButton, WorkspaceNav } from "./_components";
+import { LeaveButton } from "./_components/leave-button";
+import { AppSidebar } from "@/components/app-sidebar";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 type WorkspaceLayoutProps = {
   children: React.ReactNode;
@@ -61,10 +65,10 @@ export default async function WorkspaceLayout({
   }
 
   return (
-    <div className="border-t-3 border-primary">
-      <div className="space-y-6">
+    <div className="flex flex-col h-screen w-full min-w-0">
+      <div className="flex-1 flex flex-col space-y-6 min-w-0 overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">{organization.name}</h1>
           </div>
@@ -95,11 +99,12 @@ export default async function WorkspaceLayout({
           </div>
         </div>
 
-        {/* Navigation */}
-        <WorkspaceNav workspaceId={workspaceId} />
+        <div className="flex-shrink-0">
+          <WorkspaceNav workspaceId={workspaceId} />
+        </div>
 
-        {/* Page Content */}
-        {children}
+        {/* Content area with proper overflow handling */}
+        <div className="flex-1 min-h-0 min-w-0">{children}</div>
       </div>
     </div>
   );

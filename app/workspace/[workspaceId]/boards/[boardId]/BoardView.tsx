@@ -641,8 +641,8 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
   );
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center gap-3 mb-8">
+    <div className="h-full w-full flex flex-col min-w-0">
+      <div className="flex items-center gap-3 mb-8 flex-shrink-0">
         <div className="text-3xl font-extrabold tracking-tight drop-shadow-sm">
           {board.title}
         </div>
@@ -650,16 +650,18 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           <Kanban size={22} strokeWidth={2.2} />
         </span>
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 min-w-0">
         <DndContext
           sensors={sensors}
           collisionDetection={pointerWithin}
           onDragStart={handleDragStart}
-          // onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          <div className="flex gap-8 items-start overflow-x-auto custom-scrollbar h-full pb-4 w-full">
+          <div
+            className="flex gap-8 items-start overflow-x-auto custom-scrollbar h-full pb-4 min-w-0"
+            style={{ width: "100%" }}
+          >
             <SortableContext
               items={columnsId}
               strategy={horizontalListSortingStrategy}
