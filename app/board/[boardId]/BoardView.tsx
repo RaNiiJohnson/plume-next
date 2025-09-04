@@ -15,10 +15,10 @@ import ColumnView from "./(column)/ColumnView";
 import TaskOverlay from "./(task)/TaskOverlay";
 import { reorderTasksAndColumnsSafeAction } from "./(task)/task.action";
 
-import { useBoardState } from "./hooks/useBoardState";
-import { BoardOperations } from "./services/boardOperations";
-import { useDragAndDrop } from "./hooks/useDragAndDrop";
-import { useBoardActions } from "./hooks/useBoardAction";
+import { useBoardState } from "./_hooks/useBoardState";
+import { BoardOperations } from "./_services/boardOperations";
+import { useDragAndDrop } from "./_hooks/useDragAndDrop";
+import { useBoardActions } from "./_hooks/useBoardAction";
 
 export default function BoardView({ board: initialBoard }: { board: Board }) {
   const [openFormColId, setOpenFormColId] = useState<string | null>(null);

@@ -8,7 +8,7 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Column, Task } from "@/lib/types/type";
-import { BoardOperations } from "../services/boardOperations";
+import { BoardOperations } from "../_services/boardOperations";
 
 interface UseDragAndDropProps {
   board: any;

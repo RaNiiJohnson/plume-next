@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { Column, Task } from "@/lib/types/type";
-import { BoardOperations } from "../services/boardOperations";
+import { BoardOperations } from "../_services/boardOperations";
 
 interface BoardState {
   board: any;
