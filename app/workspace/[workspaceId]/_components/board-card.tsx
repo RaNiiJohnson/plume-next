@@ -26,7 +26,7 @@ type BoardCardProps = {
   workspaceId: string;
 };
 
-export function BoardCard({ board, index, workspaceId }: BoardCardProps) {
+export function BoardCard({ board, index }: BoardCardProps) {
   const stats = getBoardStats(board);
   const colorTheme = getBoardColor(index);
 
@@ -73,7 +73,7 @@ export function BoardCard({ board, index, workspaceId }: BoardCardProps) {
 
       {/* Board Card with varied background color */}
       <Link
-        href={`/workspace/${workspaceId}/boards/${board.id}`}
+        href={`/board/${board.id}`}
         className="block relative overflow-hidden rounded-xl bg-card text-card-foreground shadow-sm hover:shadow-md transition-all duration-200 p-6 border border-muted hover:border-primary/20 hover:bg-card/80 group h-full"
       >
         {/* Background gradient */}

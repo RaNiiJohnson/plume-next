@@ -10,6 +10,14 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { useCallback, useMemo, useState } from "react";
 import { AddColumnButton } from "./(column)/addColumnButton";
 
@@ -24,7 +32,6 @@ import {
   SortableContext,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Kanban } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import {
   addColumnSafeAction,
@@ -644,11 +651,18 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     <div className="h-full w-full flex flex-col min-w-0">
       <div className="flex items-center gap-3 mb-8 flex-shrink-0">
         <div className="text-3xl font-extrabold tracking-tight drop-shadow-sm">
-          {board.title}
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/">Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{board.title}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
-        <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary shadow w-9 h-9">
-          <Kanban size={22} strokeWidth={2.2} />
-        </span>
       </div>
       <div className="flex-1 min-h-0 min-w-0">
         <DndContext
@@ -659,7 +673,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           onDragCancel={handleDragCancel}
         >
           <div
-            className="flex gap-8 items-start overflow-x-auto custom-scrollbar h-full pb-4 min-w-0"
+            className="flex gap-8 items-start overflow-x-auto custom-scrollbar h-full pb-4"
             style={{ width: "100%" }}
           >
             <SortableContext

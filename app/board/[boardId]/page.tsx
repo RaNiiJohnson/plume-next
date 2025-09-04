@@ -34,7 +34,7 @@ export default async function Page(props: Pageprops) {
   }
 
   return (
-    <div className="h-full">
+    <div className="h-screen">
       <BoardView board={board} />
     </div>
   );
