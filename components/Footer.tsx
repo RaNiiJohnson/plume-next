@@ -8,7 +8,9 @@ export function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Kanban className="w-4 h-4" />
-            <span>© 2024 Plume. Built for productivity.</span>
+            <span>
+              © {new Date().getFullYear()} Plume. Built for productivity.
+            </span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link
