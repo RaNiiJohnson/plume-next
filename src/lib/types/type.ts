@@ -12,6 +12,7 @@ export const ColumnSchema = z.object({
   title: z.string(),
   position: z.number(),
   tasks: z.array(TaskSchema),
+  boardId: z.string(),
 });
 
 export const BoardSchema = z.object({

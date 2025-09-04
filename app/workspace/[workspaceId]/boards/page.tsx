@@ -42,7 +42,6 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
     <div className="space-y-6">
       {/* Stats Summary */}
       <div className="flex items-center gap-8 text-sm text-muted-foreground">
-        <span className="flex-1"></span>
         {stats.map((stat) => (
           <div key={stat.title} className="flex items-center gap-2">
             <span>{stat.title}:</span>
