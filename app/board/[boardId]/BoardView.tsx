@@ -61,13 +61,22 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
   return (
     <div className="h-full w-full flex flex-col min-w-0">
       {/* Header du board */}
-      <div className="flex items-center gap-3 mb-8 flex-shrink-0">
-        <div className="text-3xl font-extrabold tracking-tight drop-shadow-sm">
-          {boardState.board.title}
+      <div className="flex items-center justify-between mb-8 flex-shrink-0 p-6">
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {boardState.board.title}
+            </h1>
+            <p className="text-sm text-secondary-foreground/50 mt-1">
+              {boardState.board.columns.length} colonnes •{" "}
+              {boardState.board.columns.reduce(
+                (acc, col) => acc + col.tasks.length,
+                0
+              )}{" "}
+              tâches
+            </p>
+          </div>
         </div>
-        <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary shadow w-9 h-9">
-          <Kanban size={22} strokeWidth={2.2} />
-        </span>
       </div>
 
       {/* Zone scrollable des colonnes */}
