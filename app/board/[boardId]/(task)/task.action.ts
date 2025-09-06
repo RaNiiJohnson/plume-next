@@ -16,7 +16,7 @@ export const addTaskSafeAction = actionUser
         position: parsedInput.position,
       },
     });
-    revalidatePath(`/boards/${parsedInput.boardId}`);
+    revalidatePath(`/board/${parsedInput.boardId}`);
     return { success: true, task: newTask };
   });
 
@@ -36,7 +36,7 @@ export async function reorderTasks(tasks: TaskUpdate[]) {
       )
     );
 
-    revalidatePath(`/boards/`);
+    revalidatePath(`/board/`);
 
     return { success: true, message: "Tasks reordered successfully!" };
   } catch (error) {
@@ -59,7 +59,7 @@ export const deleteTaskSafeAction = actionUser
     await prisma.task.delete({
       where: { id: parsedInput.taskId },
     });
-    revalidatePath(`/boards/${parsedInput.boardId}`);
+    revalidatePath(`/board/${parsedInput.boardId}`);
     return { success: true, message: "Task deleted successfully." };
   });
 
@@ -70,7 +70,7 @@ export const updateTaskSafeAction = actionUser
       where: { id: parsedInput.taskId },
       data: { content: parsedInput.content },
     });
-    revalidatePath(`/boards/${parsedInput.boardId}`);
+    revalidatePath(`/board/${parsedInput.boardId}`);
     return { success: true, task: updatedTask };
   });
 

@@ -6,7 +6,6 @@ import {
   SortableContext,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Kanban } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 
 import { Board, Task } from "@/lib/types/type";

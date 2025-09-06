@@ -71,7 +71,7 @@ export const useBoardActions = (
   );
 
   const handleAddTask = useCallback(
-    async (columnId: string, content: string, boardId: string) => {
+    async (content: string, columnId: string, boardId: string) => {
       const tempTaskId = `temp-${Date.now()}`;
       const column = boardState.findColumn(columnId);
 
