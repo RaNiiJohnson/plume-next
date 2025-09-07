@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Task } from "@/lib/types/type";
 
 type TaskItemProps = {
@@ -7,6 +8,7 @@ type TaskItemProps = {
 export default function TaskItem({ task }: TaskItemProps) {
   return (
     <div className="bg-accent border border-muted p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-grab">
+      <Badge>...</Badge>
       {task.content}
     </div>
   );

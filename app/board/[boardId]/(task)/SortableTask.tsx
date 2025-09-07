@@ -1,6 +1,15 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,14 +21,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -27,14 +28,23 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { AsyncIdCallback, MoveTaskFn, TaskUpdateFn } from "@/lib/types/shared";
 import { Column, Task } from "@/lib/types/type";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Edit, MoreHorizontal, Save, Trash2, X } from "lucide-react";
+import {
+  Edit,
+  MoreHorizontal,
+  Plus,
+  Save,
+  Tags,
+  Trash2,
+  User,
+  X,
+} from "lucide-react";
 import { useOptimistic, useRef, useState, useTransition } from "react";
-import { updateTaskSafeAction } from "./task.action";
 import { toast } from "sonner";
-import { TaskUpdateFn, MoveTaskFn, AsyncIdCallback } from "@/lib/types/shared";
+import { updateTaskSafeAction } from "./task.action";
 
 type SortableTaskProps = {
   task: Task;
@@ -170,7 +180,11 @@ export default function SortableTask({
     >
       {!isEditing ? (
         <TooltipProvider>
-          <span className="flex-1 text-sm font-medium ">
+          <span className="flex flex-col flex-1 text-sm font-medium ">
+            <Badge>
+              ...
+              <Plus />
+            </Badge>
             {optimisticContent}
           </span>
           <Tooltip>
@@ -256,6 +270,24 @@ export default function SortableTask({
                     ))}
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem onSelect={() => setIsDialogOpen(true)}>
+                  Asign to
+                  <DropdownMenuShortcut>
+                    <User />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem onSelect={() => setIsDialogOpen(true)}>
+                  Edit tags
+                  <DropdownMenuShortcut>
+                    <Tags />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 

@@ -22,6 +22,11 @@ export default async function Page(props: Pageprops) {
           },
         },
       },
+      organization: {
+        include: {
+          members: true,
+        },
+      },
     },
   });
 

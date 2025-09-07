@@ -329,7 +329,7 @@ export default function ColumnView({
         </SortableContext>
       </div>
 
-      <div className="px-3 pb-3 bg-card">
+      <div className="px-3 pb-3">
         <AddTask
           columnId={column.id}
           boardId={boardId}
