@@ -6,52 +6,36 @@ import {
   SortableContext,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useAction } from "next-safe-action/hooks";
 
 import { Board, Task } from "@/lib/types/type";
 import { AddColumnButton } from "./(column)/addColumnButton";
 import ColumnView from "./(column)/ColumnView";
 import TaskOverlay from "./(task)/TaskOverlay";
-import { reorderTasksAndColumnsSafeAction } from "./(task)/task.action";
 
-import { useBoardState } from "./_hooks/useBoardState";
-import { BoardOperations } from "./_services/boardOperations";
+import { useBoardStore } from "./_hooks/useBoardStore";
 import { useDragAndDrop } from "./_hooks/useDragAndDrop";
-import { useBoardActions } from "./_hooks/useBoardAction";
 
 export default function BoardView({ board: initialBoard }: { board: Board }) {
   const [openFormColId, setOpenFormColId] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
-  // État du board
-  const boardState = useBoardState(initialBoard);
-
-  // Services
-  const { executeAsync: executeReorder } = useAction(
-    reorderTasksAndColumnsSafeAction
-  );
-  const boardOperations = useMemo(
-    () => new BoardOperations(executeReorder),
-    [executeReorder]
-  );
-
-  // Actions métier
-  const boardActions = useBoardActions(boardState, boardOperations);
+  // Board store avec TanStack Query
+  const boardStore = useBoardStore(initialBoard.id, initialBoard);
 
   // Drag & Drop
   const dragAndDrop = useDragAndDrop({
-    board: boardState.board,
-    findColumn: boardState.findColumn,
-    reorderColumns: boardState.reorderColumns,
-    reorderTasksInColumn: boardState.reorderTasksInColumn,
-    moveTaskBetweenColumns: boardState.moveTaskBetweenColumns,
-    rollbackColumn: boardState.rollbackColumn,
-    boardOperations,
+    board: boardStore.board!,
+    findColumn: boardStore.findColumn,
+    reorderColumns: boardStore.reorderColumns,
+    reorderTasksInColumn: boardStore.reorderTasksInColumn,
+    moveTaskBetweenColumns: boardStore.moveTaskBetweenColumns,
+    rollbackColumn: boardStore.rollbackColumn,
+    reorderMutation: boardStore.reorderMutation,
   });
 
   const columnsId = useMemo(
-    () => boardState.board.columns.map((col) => col.id),
-    [boardState.board.columns]
+    () => boardStore.board?.columns.map((col) => col.id) || [],
+    [boardStore.board?.columns]
   );
 
   const handleTaskEditStart = (taskId: string) => setEditingTaskId(taskId);
@@ -64,14 +48,14 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              {boardState.board.title}
+              {boardStore.board?.title}
             </h1>
             <p className="text-sm text-secondary-foreground/50 mt-1">
-              {boardState.board.columns.length} colonnes •{" "}
-              {boardState.board.columns.reduce(
+              {boardStore.board?.columns.length || 0} colonnes •{" "}
+              {boardStore.board?.columns.reduce(
                 (acc, col) => acc + col.tasks.length,
                 0
-              )}{" "}
+              ) || 0}{" "}
               tâches
             </p>
           </div>
@@ -95,30 +79,30 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
               items={columnsId}
               strategy={horizontalListSortingStrategy}
             >
-              {boardState.board.columns.map((column) => (
+              {boardStore.board?.columns.map((column) => (
                 <ColumnView
                   key={column.id}
                   column={column}
                   openFormColId={openFormColId}
                   setOpenFormColId={setOpenFormColId}
-                  boardId={boardState.board.id}
-                  handleTaskUpdate={boardActions.handleTaskUpdate}
-                  handleTaskDelete={boardActions.handleTaskDelete}
-                  onAddTask={boardActions.handleAddTask}
-                  onMoveTask={boardActions.handleMoveTaskToColumn}
-                  availableColumns={boardState.board.columns.filter(
+                  boardId={boardStore.board!.id}
+                  handleTaskUpdate={boardStore.handleTaskUpdate}
+                  handleTaskDelete={boardStore.handleTaskDelete}
+                  onAddTask={boardStore.handleAddTask}
+                  onMoveTask={boardStore.handleMoveTaskToColumn}
+                  availableColumns={boardStore.board!.columns.filter(
                     (col) => col.id !== column.id
                   )}
                   editingTaskId={editingTaskId}
                   onTaskEditStart={handleTaskEditStart}
                   onTaskEditEnd={handleTaskEditEnd}
-                  onDeleteColumn={boardActions.handleColumnDelete}
+                  onDeleteColumn={boardStore.handleColumnDelete}
                 />
-              ))}
+              )) || []}
             </SortableContext>
             <AddColumnButton
-              onAddColumn={boardActions.handleAddColumn}
-              boardId={boardState.board.id}
+              onAddColumn={boardStore.handleAddColumn}
+              boardId={boardStore.board!.id}
             />
           </div>
 
@@ -130,18 +114,18 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
                   column={dragAndDrop.activeItem}
                   openFormColId={openFormColId}
                   setOpenFormColId={setOpenFormColId}
-                  boardId={boardState.board.id}
-                  handleTaskUpdate={boardActions.handleTaskUpdate}
-                  handleTaskDelete={boardActions.handleTaskDelete}
-                  onAddTask={boardActions.handleAddTask}
-                  onMoveTask={boardActions.handleMoveTaskToColumn}
-                  availableColumns={boardState.board.columns.filter(
+                  boardId={boardStore.board!.id}
+                  handleTaskUpdate={boardStore.handleTaskUpdate}
+                  handleTaskDelete={boardStore.handleTaskDelete}
+                  onAddTask={boardStore.handleAddTask}
+                  onMoveTask={boardStore.handleMoveTaskToColumn}
+                  availableColumns={boardStore.board!.columns.filter(
                     (col) => col.id !== dragAndDrop.activeItem!.id
                   )}
                   editingTaskId={editingTaskId}
                   onTaskEditStart={handleTaskEditStart}
                   onTaskEditEnd={handleTaskEditEnd}
-                  onDeleteColumn={boardActions.handleColumnDelete}
+                  onDeleteColumn={boardStore.handleColumnDelete}
                 />
               ) : (
                 <TaskOverlay

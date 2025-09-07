@@ -7,6 +7,7 @@ import { Footer } from "../src/components/Footer";
 import "./globals.css";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,18 +43,19 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {" "}
-          <SidebarProvider>
-            <SidebarInset className="flex-1 min-w-0">
-              <div className="flex flex-col h-screen w-full">
-                <main className="flex-1 w-full">{children}</main>
-                <Footer />
-              </div>
-              <Toaster />
-            </SidebarInset>
+          <QueryProvider>
+            <SidebarProvider>
+              <SidebarInset className="flex-1 min-w-0">
+                <div className="flex flex-col h-screen w-full">
+                  <main className="flex-1 w-full">{children}</main>
+                  <Footer />
+                </div>
+                <Toaster />
+              </SidebarInset>
 
-            <AppSidebar />
-          </SidebarProvider>
+              <AppSidebar />
+            </SidebarProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

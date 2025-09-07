@@ -44,7 +44,6 @@ import {
 } from "lucide-react";
 import { useOptimistic, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { updateTaskSafeAction } from "./task.action";
 
 type SortableTaskProps = {
   task: Task;
@@ -140,28 +139,12 @@ export default function SortableTask({
     });
     handleCancel();
 
-    // Mise à jour optimiste dans le parent (BoardView)
-    onTaskUpdate?.(task.id, newContent);
-
+    // Utilise le callback du parent qui utilise maintenant TanStack Query
     try {
-      const result = await updateTaskSafeAction({
-        taskId: task.id,
-        content: newContent,
-        boardId: boardId,
-      });
-
-      if (result.data?.success) {
-        console.log("✅ Task updated successfully!");
-      } else {
-        console.error("Failed to update task:", result.data);
-        setOptimisticContent(task.content);
-        onTaskUpdate?.(task.id, task.content);
-        alert("Erreur lors de la mise à jour de la tâche.");
-      }
+      await onTaskUpdate?.(task.id, newContent);
     } catch (error) {
       console.error("Failed to update task:", error);
       setOptimisticContent(task.content);
-      onTaskUpdate?.(task.id, task.content);
       alert("Une erreur inattendue est survenue.");
     }
   };
