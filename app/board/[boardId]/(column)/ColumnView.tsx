@@ -16,7 +16,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AsyncIdCallback, IdCallback, MoveTaskFn } from "@/lib/types/shared";
+import { AsyncIdCallback, IdCallback } from "@/lib/types/shared";
 import { Column } from "@/lib/types/type";
 import { useDroppable } from "@dnd-kit/core";
 import {
@@ -38,6 +38,7 @@ import {
 import { useState } from "react";
 import { AddTask } from "../(task)/AddTask";
 import SortableTask from "../(task)/SortableTask";
+import { useBoardStore } from "../_hooks/useBoardStore";
 
 type NullableIdCallback = (id: string | null) => void;
 
@@ -49,34 +50,22 @@ type AddTaskFn = (
 
 type ColumnViewProps = {
   column: Column;
-  handleTaskUpdate: (taskId: string, newContent: string) => void;
+  boardStore: ReturnType<typeof useBoardStore>;
   openFormColId: string | null;
   setOpenFormColId: NullableIdCallback;
-  onAddTask: AddTaskFn;
-  boardId: string;
-  onMoveTask?: MoveTaskFn;
-  availableColumns?: Column[];
   editingTaskId: string | null;
   onTaskEditStart: IdCallback;
   onTaskEditEnd: () => void;
-  handleTaskDelete: AsyncIdCallback;
-  onDeleteColumn?: AsyncIdCallback;
 };
 
 export default function ColumnView({
   column,
+  boardStore,
   openFormColId,
   setOpenFormColId,
-  onAddTask,
-  boardId,
-  handleTaskUpdate,
-  onMoveTask,
-  availableColumns,
   editingTaskId,
   onTaskEditStart,
   onTaskEditEnd,
-  handleTaskDelete,
-  onDeleteColumn,
 }: ColumnViewProps) {
   const { setNodeRef: setDroppableNodeRef, isOver } = useDroppable({
     id: column.id,
@@ -114,6 +103,16 @@ export default function ColumnView({
     opacity: isDragging ? 0.6 : 1,
     scale: isDragging ? 0.98 : 1,
     zIndex: isDragging ? 10 : 1,
+  };
+
+  const onAddTask: AddTaskFn = async (content, columnId) => {
+    await boardStore.handleAddTask(content, columnId);
+    setOpenFormColId(null);
+  };
+
+  const onDeleteColumn: AsyncIdCallback = async (id) => {
+    await boardStore.handleColumnDelete(id);
+    setIsDialogOpen(false);
   };
 
   const handleDeleteColumn = async (): Promise<void> => {
@@ -311,16 +310,18 @@ export default function ColumnView({
                     }}
                   >
                     <SortableTask
-                      onTaskUpdate={handleTaskUpdate}
-                      boardId={boardId}
+                      onTaskUpdate={boardStore.handleTaskUpdate}
+                      boardId={boardStore.board!.id}
                       task={task}
-                      onMoveTask={onMoveTask}
-                      availableColumns={availableColumns}
+                      onMoveTask={boardStore.handleMoveTaskToColumn}
+                      availableColumns={boardStore.board!.columns.filter(
+                        (col) => col.id !== column.id
+                      )}
                       currentColumnId={column.id}
                       isEditing={editingTaskId === task.id}
                       onEditStart={() => onTaskEditStart(task.id)}
                       onEditEnd={onTaskEditEnd}
-                      onTaskDelete={handleTaskDelete}
+                      onTaskDelete={boardStore.handleTaskDelete}
                     />
                   </div>
                 ))
@@ -332,7 +333,7 @@ export default function ColumnView({
       <div className="px-3 pb-3">
         <AddTask
           columnId={column.id}
-          boardId={boardId}
+          boardId={boardStore.board!.id}
           showForm={openFormColId === column.id}
           onOpen={() => setOpenFormColId(column.id)}
           onClose={() => setOpenFormColId(null)}

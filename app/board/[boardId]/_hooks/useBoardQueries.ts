@@ -1,7 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Board, Column, Task } from "@/lib/types/type";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addColumnSafeAction,
   deleteColumnSafeAction,
@@ -9,8 +9,8 @@ import {
 import {
   addTaskSafeAction,
   deleteTaskSafeAction,
-  updateTaskSafeAction,
   reorderTasksAndColumnsSafeAction,
+  updateTaskSafeAction,
 } from "../(task)/task.action";
 
 // Query Keys
@@ -24,7 +24,7 @@ export const useBoardQuery = (boardId: string, initialData?: Board) => {
   return useQuery({
     queryKey: boardKeys.board(boardId),
     queryFn: async () => {
-      // Si tu as une API pour fetch le board, sinon utilise initialData
+      // API pour fetch le board, sinon initialData
       throw new Error("Board fetch API not implemented yet");
     },
     initialData,

@@ -4,12 +4,6 @@ import { hasPermission } from "@/lib/server/permissions";
 import { Bell, Users } from "lucide-react";
 import { InviteButton, WorkspaceNav } from "./_components";
 import { LeaveButton } from "./_components/leave-button";
-import { AppSidebar } from "@/components/app-sidebar";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
 
 type WorkspaceLayoutProps = {
   children: React.ReactNode;
@@ -65,7 +59,7 @@ export default async function WorkspaceLayout({
   }
 
   return (
-    <div className="flex flex-col h-screen w-full min-w-0">
+    <div className="flex flex-col h-screen w-full min-w-0 p-3">
       <div className="flex-1 flex flex-col space-y-6 min-w-0 overflow-hidden">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0">
