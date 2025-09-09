@@ -14,12 +14,10 @@ export function WorkspaceNav({ workspaceId }: WorkspaceNavProps) {
 
   const navItems = [
     {
-      href: `/workspace/${workspaceId}/boards`,
+      href: `/workspace/${workspaceId}`,
       label: "Boards",
       icon: LayoutGrid,
-      isActive:
-        pathname === `/workspace/${workspaceId}/boards` ||
-        pathname === `/workspace/${workspaceId}`,
+      isActive: pathname === `/workspace/${workspaceId}`,
     },
     {
       href: `/workspace/${workspaceId}/members`,
