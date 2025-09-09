@@ -28,8 +28,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AsyncIdCallback, MoveTaskFn, TaskUpdateFn } from "@/lib/types/shared";
-import { Column, Task } from "@/lib/types/type";
+import { useSession } from "@/lib/auth-client";
+import { Task } from "@/lib/types/type";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -44,39 +44,58 @@ import {
 } from "lucide-react";
 import { useOptimistic, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { useBoardStore } from "../_hooks/useBoardStore";
 
 type SortableTaskProps = {
   task: Task;
-  boardId: string;
   currentColumnId: string;
   isEditing: boolean;
-  availableColumns?: Column[];
-
-  onTaskUpdate: TaskUpdateFn;
-  onMoveTask?: MoveTaskFn;
+  boardStore?: ReturnType<typeof useBoardStore>;
   onEditStart: () => void;
   onEditEnd: () => void;
-  onTaskDelete: AsyncIdCallback;
 };
 
 export default function SortableTask({
+  boardStore,
   task,
-  boardId,
-  onTaskUpdate,
-  onMoveTask,
-  availableColumns,
   currentColumnId,
   isEditing,
   onEditStart,
   onEditEnd,
-  onTaskDelete,
 }: SortableTaskProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+  const currentMemberRole = boardStore?.board?.organization?.members?.find(
+    (m) => m.user.id === currentUserId
+  )?.role;
+  const hasPermission =
+    currentMemberRole === "owner" || currentMemberRole === "admin";
 
   if (!task.id) {
     console.error("SortableTask received a task without an ID!", task);
     return null;
   }
+
+  const onMoveTask = async (
+    id: string,
+    currentColumnId: string,
+    newColumnId: string
+  ) => {
+    await boardStore?.handleMoveTaskToColumn(id, currentColumnId, newColumnId);
+  };
+
+  const onTaskUpdate = async (id: string, content: string) => {
+    await boardStore?.handleTaskUpdate(id, content);
+  };
+
+  const onTaskDelete = async (id: string) => {
+    await boardStore?.handleTaskDelete(id);
+  };
+
+  const availableColumns = boardStore?.board?.columns.filter(
+    (col) => col.id !== currentColumnId
+  );
 
   const {
     attributes,
@@ -139,9 +158,8 @@ export default function SortableTask({
     });
     handleCancel();
 
-    // Utilise le callback du parent qui utilise maintenant TanStack Query
     try {
-      await onTaskUpdate?.(task.id, newContent);
+      onTaskUpdate?.(task.id, newContent);
     } catch (error) {
       console.error("Failed to update task:", error);
       setOptimisticContent(task.content);
@@ -256,12 +274,21 @@ export default function SortableTask({
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem onSelect={() => setIsDialogOpen(true)}>
-                  Asign to
-                  <DropdownMenuShortcut>
-                    <User />
-                  </DropdownMenuShortcut>
-                </DropdownMenuItem>
+                {hasPermission && (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Assign to</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {boardStore?.board?.organization?.members
+                        ?.filter((member) => member.user.id !== currentUserId)
+                        .map((member) => (
+                          <DropdownMenuItem key={member.id}>
+                            <User className="mr-2" />
+                            {member.user.name}
+                          </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                )}
 
                 <DropdownMenuSeparator />
 
@@ -274,12 +301,14 @@ export default function SortableTask({
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem onSelect={() => setIsDialogOpen(true)}>
-                  Delete
-                  <DropdownMenuShortcut>
-                    <Trash2 />
-                  </DropdownMenuShortcut>
-                </DropdownMenuItem>
+                {hasPermission && (
+                  <DropdownMenuItem onSelect={() => setIsDialogOpen(true)}>
+                    Delete
+                    <DropdownMenuShortcut>
+                      <Trash2 />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

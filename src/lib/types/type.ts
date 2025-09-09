@@ -13,6 +13,7 @@ export const MemberSchema = z.object({
   userId: z.string(),
   role: z.string(),
   createdAt: z.date(),
+  user: UserSchema,
 });
 
 export const OrganizationSchema = z.object({

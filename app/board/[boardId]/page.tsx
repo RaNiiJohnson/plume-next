@@ -1,7 +1,6 @@
+import { getUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import BoardView from "./BoardView";
-import { getUser } from "@/lib/auth-server";
-import { unauthorized } from "next/navigation";
 
 type Pageprops = {
   params: Promise<{ boardId: string }>;
@@ -24,15 +23,19 @@ export default async function Page(props: Pageprops) {
       },
       organization: {
         include: {
-          members: true,
+          members: {
+            include: {
+              user: true,
+            },
+          },
         },
       },
     },
   });
 
-  if (!user || user.id !== board?.userId) {
-    return unauthorized();
-  }
+  // if (!user || user.id !== board?.userId) {
+  //   return unauthorized();
+  // }
 
   if (!board) {
     return <div>Board not found.</div>;

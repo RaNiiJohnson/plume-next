@@ -310,18 +310,12 @@ export default function ColumnView({
                     }}
                   >
                     <SortableTask
-                      onTaskUpdate={boardStore.handleTaskUpdate}
-                      boardId={boardStore.board!.id}
+                      boardStore={boardStore}
                       task={task}
-                      onMoveTask={boardStore.handleMoveTaskToColumn}
-                      availableColumns={boardStore.board!.columns.filter(
-                        (col) => col.id !== column.id
-                      )}
                       currentColumnId={column.id}
                       isEditing={editingTaskId === task.id}
                       onEditStart={() => onTaskEditStart(task.id)}
                       onEditEnd={onTaskEditEnd}
-                      onTaskDelete={boardStore.handleTaskDelete}
                     />
                   </div>
                 ))
