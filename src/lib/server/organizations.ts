@@ -52,7 +52,7 @@ export const getActiveOrganization = async (userId: string) => {
   });
 
   if (!member?.organization) {
-    throw new Error("Aucune organisation trouvée pour cet utilisateur");
+    throw new Error("No organization found for this user");
   }
 
   return member.organization;

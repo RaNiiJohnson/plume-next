@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { WorkspaceLinks } from "@/components/Workspace.link";
 import { getUser } from "@/lib/auth-server";
 import { getOrganizations } from "@/lib/server/organizations";
 import { ArrowRight } from "lucide-react";
@@ -34,17 +35,10 @@ export default async function Home() {
                 <p className="text-sm font-medium">Your workspaces</p>
                 <div className="grid gap-3 max-w-md mx-auto">
                   {organizations.map((organization) => (
-                    <Button
+                    <WorkspaceLinks
                       key={organization.id}
-                      asChild
-                      variant="outline"
-                      className="justify-between h-12 px-4"
-                    >
-                      <Link href={`/workspace/${organization.id}`}>
-                        <span className="font-medium">{organization.name}</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </Button>
+                      organization={organization}
+                    />
                   ))}
                 </div>
               </div>
