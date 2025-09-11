@@ -84,7 +84,9 @@ export default async function WorkspaceLayout({
                 </Badge>
               </div>
             )}{" "}
-            <InviteButton organizationId={workspaceId} />
+            {(await hasPermission({ workspace: ["invite"] })) && (
+              <InviteButton organizationId={workspaceId} />
+            )}{" "}
             {(await hasPermission({ workspace: ["leave"] })) && (
               <LeaveButton
                 organizationId={workspaceId}
