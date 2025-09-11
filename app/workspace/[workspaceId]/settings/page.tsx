@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/form-date";
 import prisma from "@/lib/prisma";
 import { hasPermission } from "@/lib/server/permissions";
 import { Users } from "lucide-react";
+import { redirect } from "next/navigation";
 import EditWorkspace from "./edit-workspace";
 
 type SettingsPageProps = {
@@ -19,6 +20,14 @@ type SettingsPageProps = {
 
 export default async function SettingsPage({ params }: SettingsPageProps) {
   const { workspaceId } = await params;
+
+  // Check if user has permission to access settings
+  const canAccessSettings = await hasPermission({ workspace: ["update"] });
+
+  if (!canAccessSettings) {
+    redirect(`/workspace/${workspaceId}`);
+  }
+
   const currentUser = await getUser();
 
   const organization = await prisma.organization.findUnique({

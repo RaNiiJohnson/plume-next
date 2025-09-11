@@ -15,6 +15,7 @@ export default async function WorkspaceLayout({
   params,
 }: WorkspaceLayoutProps) {
   const { workspaceId } = await params;
+  const canAccessSettings = await hasPermission({ workspace: ["update"] });
 
   // Get organization info
   const organization = await prisma.organization.findUnique({
@@ -94,7 +95,10 @@ export default async function WorkspaceLayout({
         </div>
 
         <div className="flex-shrink-0">
-          <WorkspaceNav workspaceId={workspaceId} />
+          <WorkspaceNav
+            workspaceId={workspaceId}
+            canAccessSettings={canAccessSettings}
+          />
         </div>
 
         {/* Content area with proper overflow handling */}
