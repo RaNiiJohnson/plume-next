@@ -230,7 +230,9 @@ export default function ColumnView({
 
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setOpenFormColId(column.id)}
+              onClick={() =>
+                setOpenFormColId(openFormColId === column.id ? null : column.id)
+              }
               className="p-1.5 rounded-md transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
               title="Add task"
             >
