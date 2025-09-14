@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "../utils/test-utils";
-import { describe, it, expect, vi } from "vitest";
-import { Board, Column, Task } from "@/lib/types/type";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Board } from "@/lib/types/type";
 
 // Test d'intégration pour les opérations complexes du board
 describe("Board Operations Integration", () => {
@@ -11,6 +11,11 @@ describe("Board Operations Integration", () => {
     moveTask: vi.fn(),
     reorderColumns: vi.fn(),
   };
+
+  beforeEach(() => {
+    // Reset tous les mocks avant chaque test
+    vi.clearAllMocks();
+  });
 
   // Composant de test qui simule les opérations complexes
   const TestBoardOperations = ({ board }: { board: Board }) => {

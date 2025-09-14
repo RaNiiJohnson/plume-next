@@ -1,32 +1,11 @@
 import { render, screen } from "../../utils/test-utils";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import BoardView from "@app/board/[boardId]/BoardView";
 import { Board, Column, Task } from "@/lib/types/type";
 
 // Mock des hooks personnalisés
-vi.mock("@app/board/[boardId]/_hooks/useBoardStore", () => ({
-  useBoardStore: vi.fn(() => ({
-    board: mockBoard,
-    findColumn: vi.fn(),
-    reorderColumns: vi.fn(),
-    reorderTasksInColumn: vi.fn(),
-    moveTaskBetweenColumns: vi.fn(),
-    rollbackColumn: vi.fn(),
-    reorderMutation: { isPending: false },
-    handleAddColumn: vi.fn(),
-  })),
-}));
-
-vi.mock("@app/board/[boardId]/_hooks/useDragAndDrop", () => ({
-  useDragAndDrop: vi.fn(() => ({
-    sensors: [],
-    activeItem: null,
-    draggedItemWidth: null,
-    handleDragStart: vi.fn(),
-    handleDragEnd: vi.fn(),
-    handleDragCancel: vi.fn(),
-  })),
-}));
+vi.mock("@app/board/[boardId]/_hooks/useBoardStore");
+vi.mock("@app/board/[boardId]/_hooks/useDragAndDrop");
 
 // Mock des composants enfants
 vi.mock("@app/board/[boardId]/(column)/ColumnView", () => ({
@@ -39,7 +18,7 @@ vi.mock("@app/board/[boardId]/(column)/ColumnView", () => ({
 }));
 
 vi.mock("@app/board/[boardId]/(column)/addColumnButton", () => ({
-  AddColumnButton: ({ boardId }: { boardId: string }) => (
+  AddColumnButton: () => (
     <button data-testid="add-column">Ajouter colonne</button>
   ),
 }));
@@ -80,6 +59,36 @@ const mockBoard: Board = {
 };
 
 describe("BoardView", () => {
+  beforeEach(async () => {
+    // Configuration des mocks
+    const { useBoardStore } = await import(
+      "@app/board/[boardId]/_hooks/useBoardStore"
+    );
+    const { useDragAndDrop } = await import(
+      "@app/board/[boardId]/_hooks/useDragAndDrop"
+    );
+
+    vi.mocked(useBoardStore).mockReturnValue({
+      board: mockBoard,
+      findColumn: vi.fn(),
+      reorderColumns: vi.fn(),
+      reorderTasksInColumn: vi.fn(),
+      moveTaskBetweenColumns: vi.fn(),
+      rollbackColumn: vi.fn(),
+      reorderMutation: { isPending: false },
+      handleAddColumn: vi.fn(),
+    });
+
+    vi.mocked(useDragAndDrop).mockReturnValue({
+      sensors: [],
+      activeItem: null,
+      draggedItemWidth: null,
+      handleDragStart: vi.fn(),
+      handleDragEnd: vi.fn(),
+      handleDragCancel: vi.fn(),
+    });
+  });
+
   it("renders board title correctly", () => {
     render(<BoardView board={mockBoard} />);
 
@@ -105,11 +114,26 @@ describe("BoardView", () => {
     expect(screen.getByTestId("add-column")).toBeInTheDocument();
   });
 
-  it("handles empty board", () => {
+  it("handles empty board", async () => {
     const emptyBoard: Board = {
       ...mockBoard,
       columns: [],
     };
+
+    // Configurer le mock pour retourner le board vide
+    const { useBoardStore } = await import(
+      "@app/board/[boardId]/_hooks/useBoardStore"
+    );
+    vi.mocked(useBoardStore).mockReturnValue({
+      board: emptyBoard,
+      findColumn: vi.fn(),
+      reorderColumns: vi.fn(),
+      reorderTasksInColumn: vi.fn(),
+      moveTaskBetweenColumns: vi.fn(),
+      rollbackColumn: vi.fn(),
+      reorderMutation: { isPending: false },
+      handleAddColumn: vi.fn(),
+    });
 
     render(<BoardView board={emptyBoard} />);
 

@@ -1,6 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
 import { useBoardStore } from "@app/board/[boardId]/_hooks/useBoardStore";
 import { Board, Column, Task } from "@/lib/types/type";
 

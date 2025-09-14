@@ -8,4 +8,10 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["__tests__/setup.ts"],
   },
+  resolve: {
+    alias: {
+      "@": new URL("./src", import.meta.url).pathname,
+      "@app": new URL("./app", import.meta.url).pathname,
+    },
+  },
 });
