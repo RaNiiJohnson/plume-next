@@ -17,6 +17,12 @@ Object.defineProperty(window, "matchMedia", {
   }),
 });
 
+// Mock de scrollIntoView pour Radix UI
+Object.defineProperty(Element.prototype, "scrollIntoView", {
+  writable: true,
+  value: () => {},
+});
+
 // Nettoie après chaque test
 afterEach(() => {
   cleanup();
