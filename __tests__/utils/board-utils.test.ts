@@ -25,7 +25,9 @@ export const boardUtils = {
   },
 
   // Réorganiser les positions après suppression
-  reorderPositions: (items: Array<{ id: string; position: number }>) => {
+  reorderPositions: <T extends { id: string; position: number }>(
+    items: T[]
+  ): T[] => {
     return items
       .sort((a, b) => a.position - b.position)
       .map((item, index) => ({ ...item, position: index + 1 }));
@@ -120,7 +122,7 @@ export const boardUtils = {
 
         if (column.id === targetColumnId) {
           // Ajouter la tâche à la colonne cible
-          const updatedTask = {
+          const updatedTask: Task = {
             ...task,
             columnId: targetColumnId,
             position: newPosition,
