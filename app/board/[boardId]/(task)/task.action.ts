@@ -48,6 +48,31 @@ export async function reorderTasks(tasks: TaskUpdate[]) {
   }
 }
 
+export const addtagsToTaskSafeAction = actionUser
+  .inputSchema(
+    z.object({
+      taskId: z.string(),
+      boardId: z.string(),
+      tags: z.array(z.string()),
+    })
+  )
+  .action(async ({ parsedInput }) => {
+    try {
+      const updatedTask = await prisma.task.update({
+        where: { id: parsedInput.taskId },
+        data: { tags: parsedInput.tags },
+      });
+      revalidatePath(`/board/${parsedInput.boardId}`);
+      return { success: true, task: updatedTask };
+    } catch (error) {
+      console.error("Error updating task tags:", error);
+      return {
+        error: "Failed to update task tags.",
+        details: (error as Error).message,
+      };
+    }
+  });
+
 export const deleteTaskSafeAction = actionUser
   .inputSchema(
     z.object({

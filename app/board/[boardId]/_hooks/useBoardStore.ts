@@ -9,6 +9,7 @@ import {
   useDeleteColumnMutation,
   useAddTaskMutation,
   useUpdateTaskMutation,
+  useUpdateTaskTagsMutation,
   useDeleteTaskMutation,
   useReorderMutation,
 } from "./useBoardQueries";
@@ -24,6 +25,7 @@ export const useBoardStore = (boardId: string, initialBoard: Board) => {
   const deleteColumnMutation = useDeleteColumnMutation(boardId);
   const addTaskMutation = useAddTaskMutation(boardId);
   const updateTaskMutation = useUpdateTaskMutation(boardId);
+  const updateTaskTagsMutation = useUpdateTaskTagsMutation(boardId);
   const deleteTaskMutation = useDeleteTaskMutation(boardId);
   const reorderMutation = useReorderMutation(boardId);
 
@@ -116,6 +118,10 @@ export const useBoardStore = (boardId: string, initialBoard: Board) => {
     await updateTaskMutation.mutateAsync({ taskId, content: newContent });
   };
 
+  const handleTaskTagsUpdate = async (taskId: string, tags: string[]) => {
+    await updateTaskTagsMutation.mutateAsync({ taskId, tags });
+  };
+
   const handleTaskDelete = async (taskId: string) => {
     await deleteTaskMutation.mutateAsync({ taskId });
   };
@@ -187,6 +193,7 @@ export const useBoardStore = (boardId: string, initialBoard: Board) => {
     handleColumnDelete,
     handleAddTask,
     handleTaskUpdate,
+    handleTaskTagsUpdate,
     handleTaskDelete,
     handleMoveTaskToColumn,
 
@@ -194,6 +201,7 @@ export const useBoardStore = (boardId: string, initialBoard: Board) => {
     isAddingColumn: addColumnMutation.isPending,
     isAddingTask: addTaskMutation.isPending,
     isUpdatingTask: updateTaskMutation.isPending,
+    isUpdatingTaskTags: updateTaskTagsMutation.isPending,
     isDeletingTask: deleteTaskMutation.isPending,
     isReordering: reorderMutation.isPending,
 

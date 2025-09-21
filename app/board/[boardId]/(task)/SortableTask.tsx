@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogClose,
@@ -10,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +32,11 @@ import {
 } from "@/components/ui/tooltip";
 import { useSession } from "@/lib/auth-client";
 import { Task } from "@/lib/types/type";
+
+// Type étendu pour Task avec tags
+type TaskWithTags = Task & {
+  tags?: string[];
+};
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -47,7 +54,7 @@ import { toast } from "sonner";
 import { useBoardStore } from "../_hooks/useBoardStore";
 
 type SortableTaskProps = {
-  task: Task;
+  task: TaskWithTags;
   currentColumnId: string;
   isEditing: boolean;
   boardStore?: ReturnType<typeof useBoardStore>;
@@ -63,7 +70,11 @@ export default function SortableTask({
   onEditStart,
   onEditEnd,
 }: SortableTaskProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isTagsDialogOpen, setIsTagsDialogOpen] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>(task.tags || []);
+
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const currentMemberRole = boardStore?.board?.organization?.members?.find(
@@ -142,6 +153,10 @@ export default function SortableTask({
     task.content,
     (_, newContent: string) => newContent
   );
+  const [optimisticTag, setOptimisticTag] = useOptimistic(
+    task.tags || [],
+    (_, newTags: string[]) => newTags
+  );
 
   const submit = async () => {
     const newContent = ref.current?.value ?? "";
@@ -170,6 +185,60 @@ export default function SortableTask({
   const editContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Tags prédéfinis avec couleurs
+  const predefinedTags = [
+    { name: "urgent", color: "bg-red-500" },
+    { name: "important", color: "bg-orange-500" },
+    { name: "bug", color: "bg-red-600" },
+    { name: "feature", color: "bg-blue-500" },
+    { name: "enhancement", color: "bg-green-500" },
+    { name: "documentation", color: "bg-purple-500" },
+    { name: "testing", color: "bg-yellow-700" },
+    { name: "review", color: "bg-indigo-500" },
+  ];
+
+  const handleTagToggle = (tagName: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tagName)
+        ? prev.filter((tag) => tag !== tagName)
+        : [...prev, tagName]
+    );
+  };
+
+  const handleAddNewTag = () => {
+    if (newTagName.trim() && !selectedTags.includes(newTagName.trim())) {
+      setSelectedTags((prev) => [...prev, newTagName.trim()]);
+      setNewTagName("");
+    }
+  };
+
+  const handleRemoveTag = (tagName: string) => {
+    setSelectedTags((prev) => prev.filter((tag) => tag !== tagName));
+  };
+
+  const handleSaveTags = async () => {
+    try {
+      startTransition(() => {
+        setOptimisticTag(selectedTags);
+      });
+
+      setIsTagsDialogOpen(false);
+
+      await boardStore?.handleTaskTagsUpdate(task.id, selectedTags);
+      toast("Tags updated successfully!");
+    } catch (error) {
+      console.error("Error saving tags:", error);
+      toast("Failed to update tags");
+      // En cas d'erreur, on peut rétablir l'état précédent
+      setOptimisticTag(task.tags || []);
+    }
+  };
+
+  const getTagColor = (tagName: string) => {
+    const predefined = predefinedTags.find((tag) => tag.name === tagName);
+    return predefined?.color || "bg-gray-500";
+  };
+
   return (
     <div
       suppressHydrationWarning
@@ -181,13 +250,28 @@ export default function SortableTask({
     >
       {!isEditing ? (
         <TooltipProvider>
-          <span className="flex flex-col flex-1 text-sm font-medium ">
-            <Badge>
-              ...
-              <Plus />
-            </Badge>
-            {optimisticContent}
-          </span>
+          <div className="flex flex-col flex-1">
+            <span className="text-sm font-medium mb-2">
+              {optimisticContent}
+            </span>
+            {optimisticTag && optimisticTag.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {optimisticTag.map((tag) => (
+                  <Badge
+                    key={tag}
+                    onClick={() => {
+                      setIsTagsDialogOpen(true);
+                    }}
+                    className={`${getTagColor(
+                      tag
+                    )} text-white cursor-pointer text-xs px-2 py-0.5`}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -233,7 +317,6 @@ export default function SortableTask({
               <Save size={16} className="mr-1" />
               Save
             </Button>
-
             <Button
               variant="outline"
               size="icon"
@@ -246,7 +329,6 @@ export default function SortableTask({
             >
               <X size={16} />
             </Button>
-
             <div className="flex-1" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -292,7 +374,12 @@ export default function SortableTask({
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem onSelect={() => setIsDialogOpen(true)}>
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setIsTagsDialogOpen(true);
+                  }}
+                >
                   Edit tags
                   <DropdownMenuShortcut>
                     <Tags />
@@ -302,7 +389,12 @@ export default function SortableTask({
                 <DropdownMenuSeparator />
 
                 {hasPermission && (
-                  <DropdownMenuItem onSelect={() => setIsDialogOpen(true)}>
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setIsDeleteDialogOpen(true);
+                    }}
+                  >
                     Delete
                     <DropdownMenuShortcut>
                       <Trash2 />
@@ -311,26 +403,125 @@ export default function SortableTask({
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    Are you sure you want to delete it ?
-                  </DialogTitle>
-                </DialogHeader>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                  </DialogClose>
-                  <Button variant="destructive" onClick={handleDelete}>
-                    Delete
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </div>
         </div>
       )}
+
+      {/* delete dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure you want to delete it ?</DialogTitle>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* tags dialog */}
+      <Dialog open={isTagsDialogOpen} onOpenChange={setIsTagsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Tags</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Tags actuels */}
+            {selectedTags.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2">Current Tags</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      className={`${getTagColor(
+                        tag
+                      )} text-white hover:opacity-80 cursor-pointer`}
+                      onClick={() => handleRemoveTag(tag)}
+                    >
+                      {tag}
+                      <X size={12} className="ml-1" />
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tags prédéfinis */}
+            <div>
+              <h4 className="text-sm font-medium mb-2">Available Tags</h4>
+              <div className="flex flex-wrap gap-2">
+                {predefinedTags.map((tag) => (
+                  <Badge
+                    key={tag.name}
+                    variant={
+                      selectedTags.includes(tag.name) ? "default" : "outline"
+                    }
+                    className={`cursor-pointer transition-colors ${
+                      selectedTags.includes(tag.name)
+                        ? `${tag.color} text-white`
+                        : "hover:bg-muted"
+                    }`}
+                    onClick={() => handleTagToggle(tag.name)}
+                  >
+                    {tag.name}
+                    {selectedTags.includes(tag.name) ? (
+                      <X size={12} className="ml-1" />
+                    ) : (
+                      <Plus size={12} className="ml-1" />
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Ajouter un nouveau tag */}
+            <div>
+              <h4 className="text-sm font-medium mb-2">Add New Tag</h4>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter tag name..."
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddNewTag();
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleAddNewTag}
+                  disabled={
+                    !newTagName.trim() ||
+                    selectedTags.includes(newTagName.trim())
+                  }
+                  size="sm"
+                >
+                  <Plus size={16} />
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              onClick={handleSaveTags}
+              disabled={boardStore?.isUpdatingTaskTags}
+            >
+              {boardStore?.isUpdatingTaskTags ? "Saving..." : "Save Tags"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

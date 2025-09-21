@@ -8,6 +8,7 @@ import {
 } from "../(column)/column.action";
 import {
   addTaskSafeAction,
+  addtagsToTaskSafeAction,
   deleteTaskSafeAction,
   reorderTasksAndColumnsSafeAction,
   updateTaskSafeAction,
@@ -289,6 +290,55 @@ export const useDeleteTaskMutation = (boardId: string) => {
           columns: previousBoard.columns.map((col) => ({
             ...col,
             tasks: col.tasks.filter((task) => task.id !== taskId),
+          })),
+        });
+      }
+
+      return { previousBoard };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(
+          boardKeys.board(boardId),
+          context.previousBoard
+        );
+      }
+    },
+  });
+};
+
+// Mutation pour les tags
+export const useUpdateTaskTagsMutation = (boardId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      taskId,
+      tags,
+    }: {
+      taskId: string;
+      tags: string[];
+    }) => {
+      const response = await addtagsToTaskSafeAction({ taskId, boardId, tags });
+      if (!response.data?.success) {
+        throw new Error("Failed to update task tags");
+      }
+      return response.data.task;
+    },
+    onMutate: async ({ taskId, tags }) => {
+      await queryClient.cancelQueries({ queryKey: boardKeys.board(boardId) });
+      const previousBoard = queryClient.getQueryData<Board>(
+        boardKeys.board(boardId)
+      );
+
+      if (previousBoard) {
+        queryClient.setQueryData<Board>(boardKeys.board(boardId), {
+          ...previousBoard,
+          columns: previousBoard.columns.map((col) => ({
+            ...col,
+            tasks: col.tasks.map((task) =>
+              task.id === taskId ? { ...task, tags } : task
+            ),
           })),
         });
       }

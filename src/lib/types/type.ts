@@ -31,6 +31,7 @@ export const TaskSchema = z.object({
   content: z.string(),
   position: z.number(),
   columnId: z.string(),
+  tags: z.array(z.string()).optional(),
 });
 
 export const ColumnSchema = z.object({

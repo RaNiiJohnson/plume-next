@@ -98,7 +98,7 @@ export async function NotificationsMenu() {
                   <SidebarMenuSubButton asChild>
                     <Link
                       href={`/invite/${invitation.id}`}
-                      className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-primary"
+                      className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-primary/30"
                     >
                       <Users className="w-4 h-4" />
                       You've been invited...
