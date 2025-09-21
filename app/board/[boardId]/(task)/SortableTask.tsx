@@ -223,6 +223,7 @@ export default function SortableTask({
       });
 
       setIsTagsDialogOpen(false);
+      handleCancel();
 
       await boardStore?.handleTaskTagsUpdate(task.id, selectedTags);
       toast("Tags updated successfully!");
