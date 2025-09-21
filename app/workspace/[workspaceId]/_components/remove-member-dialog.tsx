@@ -49,7 +49,7 @@ export function RemoveMemberDialog({ member }: { member: MemberWithUser }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive">Remove this {member.role}</Button>
+        <Button variant="destructive">Remove from workspace</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
