@@ -247,7 +247,7 @@ export default function SortableTask({
       {...attributes}
       {...listeners}
       style={style}
-      className="flex bg-muted border border-muted p-3 rounded-lg shadow-sm hover:bg-accent cursor-grab active:cursor-grabbing select-none group"
+      className="flex bg-muted border border-muted p-3 rounded-sm shadow-sm hover:bg-accent cursor-grab active:cursor-grabbing select-none group"
     >
       {!isEditing ? (
         <TooltipProvider>
