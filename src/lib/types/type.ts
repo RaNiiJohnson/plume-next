@@ -29,9 +29,11 @@ export const OrganizationSchema = z.object({
 export const TaskSchema = z.object({
   id: z.string(),
   content: z.string(),
+  description: z.string().optional(),
   position: z.number(),
   columnId: z.string(),
   tags: z.array(z.string()).optional(),
+  dueDate: z.date().nullable().optional(),
 });
 
 export const ColumnSchema = z.object({

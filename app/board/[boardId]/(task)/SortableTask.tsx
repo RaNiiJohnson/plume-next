@@ -49,9 +49,16 @@ import {
   User,
   X,
 } from "lucide-react";
-import { useOptimistic, useRef, useState, useTransition } from "react";
+import React, {
+  useEffect,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
 import { useBoardStore } from "../_hooks/useBoardStore";
+import { useParams, useRouter } from "next/navigation";
 
 type SortableTaskProps = {
   task: TaskWithTags;
@@ -76,6 +83,8 @@ export default function SortableTask({
   const [selectedTags, setSelectedTags] = useState<string[]>(task.tags || []);
 
   const { data: session } = useSession();
+  const router = useRouter();
+  const params = useParams();
   const currentUserId = session?.user?.id;
   const currentMemberRole = boardStore?.board?.organization?.members?.find(
     (m) => m.user.id === currentUserId
@@ -126,6 +135,13 @@ export default function SortableTask({
 
   const handleEdit = () => {
     onEditStart();
+  };
+
+  const handleTaskClick = (e: React.MouseEvent) => {
+    // Ne pas ouvrir le modal si on clique sur les boutons ou si on est en mode édition
+    if (isEditing || e.defaultPrevented) return;
+
+    router.push(`/board/${params.boardId}/task/${task.id}`);
   };
 
   const handleDelete = async () => {
@@ -185,7 +201,25 @@ export default function SortableTask({
   const editContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Tags prédéfinis avec couleurs
+  // // Close edit on outside click
+  // useEffect(() => {
+  //   if (!isEditing) return;
+
+  //   const handleDocumentMouseDown = (event: MouseEvent) => {
+  //     const target = event.target as Node | null;
+  //     if (!target) return;
+  //     const editEl = editContainerRef.current;
+  //     if (editEl && !editEl.contains(target)) {
+  //       onEditEnd();
+  //     }
+  //   };
+
+  //   document.addEventListener("mousedown", handleDocumentMouseDown);
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleDocumentMouseDown);
+  //   };
+  // }, [isEditing, onEditEnd]);
+
   const predefinedTags = [
     { name: "urgent", color: "bg-red-500" },
     { name: "important", color: "bg-orange-500" },
@@ -251,7 +285,10 @@ export default function SortableTask({
     >
       {!isEditing ? (
         <TooltipProvider>
-          <div className="flex flex-col flex-1">
+          <div
+            className="flex flex-col flex-1 cursor-pointer"
+            onClick={handleTaskClick}
+          >
             <span className="text-sm font-medium mb-2">
               {optimisticContent}
             </span>
@@ -260,7 +297,9 @@ export default function SortableTask({
                 {optimisticTag.map((tag) => (
                   <Badge
                     key={tag}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setIsTagsDialogOpen(true);
                     }}
                     className={`${getTagColor(
@@ -276,7 +315,11 @@ export default function SortableTask({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={handleEdit}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleEdit();
+                }}
                 variant="ghost"
                 className="size-5 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
               >

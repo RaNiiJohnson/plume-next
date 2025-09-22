@@ -9,8 +9,14 @@ export const AddTaskSchema = z.object({
 
 export const updateTaskSchema = z.object({
   taskId: z.string(),
-  content: z.string().min(1, { message: "Task content cannot be empty." }),
   boardId: z.string(),
+  // Rendre tous les champs optionnels sauf taskId et boardId
+  content: z
+    .string()
+    .min(1, { message: "Task content cannot be empty." })
+    .optional(),
+  description: z.string().optional(),
+  dueDate: z.date().nullable().optional(),
 });
 
 export const TaskUpdtateZod = z.object({

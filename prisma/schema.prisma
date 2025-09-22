@@ -61,8 +61,8 @@ model Column {
 
 model Task {
   id          String  @id @default(cuid())
-  content     String // Titre de la tâche
-  description String? // Description détaillée (optionnelle)
+  content     String
+  description String?
 
   column   Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId String

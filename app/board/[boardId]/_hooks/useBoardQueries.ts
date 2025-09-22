@@ -1,6 +1,7 @@
 "use client";
 
 import { Board, Column, Task } from "@/lib/types/type";
+import { Task as PrismaTask, Column as PrismaColumn } from "@/generated/prisma";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addColumnSafeAction,
@@ -14,13 +15,34 @@ import {
   updateTaskSafeAction,
 } from "../(task)/task.action";
 
+// Helper function to transform Prisma Task to frontend Task
+const transformPrismaTask = (prismaTask: PrismaTask): Task => ({
+  id: prismaTask.id,
+  content: prismaTask.content,
+  description: prismaTask.description || undefined,
+  position: prismaTask.position,
+  columnId: prismaTask.columnId,
+  tags: prismaTask.tags.length > 0 ? prismaTask.tags : undefined,
+});
+
+// Helper function to transform Prisma Column to frontend Column
+const transformPrismaColumn = (
+  prismaColumn: PrismaColumn & { tasks: PrismaTask[] }
+): Column => ({
+  id: prismaColumn.id,
+  title: prismaColumn.title,
+  position: prismaColumn.position,
+  tasks: prismaColumn.tasks.map(transformPrismaTask),
+  boardId: prismaColumn.boardId,
+});
+
 // Query Keys
 export const boardKeys = {
   all: ["boards"] as const,
   board: (boardId: string) => [...boardKeys.all, boardId] as const,
 };
 
-// Hook pour récupérer un board (si tu as une API pour ça)
+// Hook pour récupérer un board
 export const useBoardQuery = (boardId: string, initialData?: Board) => {
   return useQuery({
     queryKey: boardKeys.board(boardId),
@@ -72,21 +94,32 @@ export const useAddColumnMutation = (boardId: string) => {
 
       return { previousBoard };
     },
-    onSuccess: (newColumn, variables, context) => {
+    onSuccess: (newColumn, _variables, _context) => {
       // Replace temp column with real one
       const currentBoard = queryClient.getQueryData<Board>(
         boardKeys.board(boardId)
       );
       if (currentBoard) {
+        // Transform the Prisma column to frontend format if needed
+        const transformedColumn: Column = newColumn.tasks
+          ? transformPrismaColumn(newColumn as any)
+          : {
+              id: newColumn.id,
+              title: newColumn.title,
+              position: newColumn.position,
+              tasks: [],
+              boardId: newColumn.boardId,
+            };
+
         queryClient.setQueryData<Board>(boardKeys.board(boardId), {
           ...currentBoard,
           columns: currentBoard.columns.map((col) =>
-            col.id.startsWith("temp-") ? newColumn : col
+            col.id.startsWith("temp-") ? transformedColumn : col
           ),
         });
       }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       // Rollback on error
       if (context?.previousBoard) {
         queryClient.setQueryData(
@@ -120,13 +153,18 @@ export const useDeleteColumnMutation = (boardId: string) => {
           ...previousBoard,
           columns: previousBoard.columns
             .filter((col) => col.id !== columnId)
-            .map((col, index) => ({ ...col, position: index + 1 })),
+            .map((col, index) => ({
+              ...col,
+              position: index + 1,
+              // Ensure tasks remain in the correct format
+              tasks: col.tasks || [],
+            })),
         });
       }
 
       return { previousBoard };
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previousBoard) {
         queryClient.setQueryData(
           boardKeys.board(boardId),
@@ -188,11 +226,14 @@ export const useAddTaskMutation = (boardId: string) => {
 
       return { previousBoard };
     },
-    onSuccess: (newTask, variables, context) => {
+    onSuccess: (newTask, variables, _context) => {
       const currentBoard = queryClient.getQueryData<Board>(
         boardKeys.board(boardId)
       );
       if (currentBoard) {
+        // Transform the Prisma task to frontend format
+        const transformedTask = transformPrismaTask(newTask as PrismaTask);
+
         queryClient.setQueryData<Board>(boardKeys.board(boardId), {
           ...currentBoard,
           columns: currentBoard.columns.map((col) =>
@@ -200,7 +241,7 @@ export const useAddTaskMutation = (boardId: string) => {
               ? {
                   ...col,
                   tasks: col.tasks.map((task) =>
-                    task.id.startsWith("temp-") ? newTask : task
+                    task.id.startsWith("temp-") ? transformedTask : task
                   ),
                 }
               : col
@@ -208,7 +249,7 @@ export const useAddTaskMutation = (boardId: string) => {
         });
       }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previousBoard) {
         queryClient.setQueryData(
           boardKeys.board(boardId),
@@ -219,24 +260,27 @@ export const useAddTaskMutation = (boardId: string) => {
   });
 };
 
+// Mutation générique pour mettre à jour une tâche
 export const useUpdateTaskMutation = (boardId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      taskId,
-      content,
-    }: {
+    mutationFn: async (updateData: {
       taskId: string;
-      content: string;
+      content?: string;
+      description?: string;
+      dueDate?: Date | null;
     }) => {
-      const response = await updateTaskSafeAction({ taskId, content, boardId });
+      const response = await updateTaskSafeAction({
+        boardId,
+        ...updateData,
+      });
       if (!response.data?.success) {
         throw new Error("Failed to update task");
       }
       return response.data.task;
     },
-    onMutate: async ({ taskId, content }) => {
+    onMutate: async (updateData) => {
       await queryClient.cancelQueries({ queryKey: boardKeys.board(boardId) });
       const previousBoard = queryClient.getQueryData<Board>(
         boardKeys.board(boardId)
@@ -248,7 +292,20 @@ export const useUpdateTaskMutation = (boardId: string) => {
           columns: previousBoard.columns.map((col) => ({
             ...col,
             tasks: col.tasks.map((task) =>
-              task.id === taskId ? { ...task, content } : task
+              task.id === updateData.taskId
+                ? {
+                    ...task,
+                    ...(updateData.content !== undefined && {
+                      content: updateData.content,
+                    }),
+                    ...(updateData.description !== undefined && {
+                      description: updateData.description,
+                    }),
+                    ...(updateData.dueDate !== undefined && {
+                      dueDate: updateData.dueDate,
+                    }),
+                  }
+                : task
             ),
           })),
         });
@@ -256,13 +313,81 @@ export const useUpdateTaskMutation = (boardId: string) => {
 
       return { previousBoard };
     },
-    onError: (err, variables, context) => {
+    onSuccess: (updatedTask) => {
+      // Mettre à jour avec la réponse du serveur
+      const currentBoard = queryClient.getQueryData<Board>(
+        boardKeys.board(boardId)
+      );
+      if (currentBoard && updatedTask) {
+        const transformedTask = transformPrismaTask(updatedTask as PrismaTask);
+
+        queryClient.setQueryData<Board>(boardKeys.board(boardId), {
+          ...currentBoard,
+          columns: currentBoard.columns.map((col) => ({
+            ...col,
+            tasks: col.tasks.map((task) =>
+              task.id === transformedTask.id ? transformedTask : task
+            ),
+          })),
+        });
+      }
+    },
+    onError: (_err, _variables, context) => {
       if (context?.previousBoard) {
         queryClient.setQueryData(
           boardKeys.board(boardId),
           context.previousBoard
         );
       }
+    },
+  });
+};
+
+// Mutations spécialisées pour plus de facilité d'utilisation
+export const useUpdateTaskContentMutation = (boardId: string) => {
+  const updateTaskMutation = useUpdateTaskMutation(boardId);
+
+  return useMutation({
+    mutationFn: async ({
+      taskId,
+      content,
+    }: {
+      taskId: string;
+      content: string;
+    }) => {
+      return updateTaskMutation.mutateAsync({ taskId, content });
+    },
+  });
+};
+
+export const useUpdateTaskDescriptionMutation = (boardId: string) => {
+  const updateTaskMutation = useUpdateTaskMutation(boardId);
+
+  return useMutation({
+    mutationFn: async ({
+      taskId,
+      description,
+    }: {
+      taskId: string;
+      description: string;
+    }) => {
+      return updateTaskMutation.mutateAsync({ taskId, description });
+    },
+  });
+};
+
+export const useUpdateTaskDueDateMutation = (boardId: string) => {
+  const updateTaskMutation = useUpdateTaskMutation(boardId);
+
+  return useMutation({
+    mutationFn: async ({
+      taskId,
+      dueDate,
+    }: {
+      taskId: string;
+      dueDate: Date;
+    }) => {
+      return updateTaskMutation.mutateAsync({ taskId, dueDate });
     },
   });
 };
@@ -296,7 +421,7 @@ export const useDeleteTaskMutation = (boardId: string) => {
 
       return { previousBoard };
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previousBoard) {
         queryClient.setQueryData(
           boardKeys.board(boardId),
@@ -337,7 +462,9 @@ export const useUpdateTaskTagsMutation = (boardId: string) => {
           columns: previousBoard.columns.map((col) => ({
             ...col,
             tasks: col.tasks.map((task) =>
-              task.id === taskId ? { ...task, tags } : task
+              task.id === taskId
+                ? { ...task, tags: tags.length > 0 ? tags : undefined }
+                : task
             ),
           })),
         });
@@ -345,7 +472,26 @@ export const useUpdateTaskTagsMutation = (boardId: string) => {
 
       return { previousBoard };
     },
-    onError: (err, variables, context) => {
+    onSuccess: (updatedTask) => {
+      // Update with the actual response from server
+      const currentBoard = queryClient.getQueryData<Board>(
+        boardKeys.board(boardId)
+      );
+      if (currentBoard && updatedTask) {
+        const transformedTask = transformPrismaTask(updatedTask as PrismaTask);
+
+        queryClient.setQueryData<Board>(boardKeys.board(boardId), {
+          ...currentBoard,
+          columns: currentBoard.columns.map((col) => ({
+            ...col,
+            tasks: col.tasks.map((task) =>
+              task.id === transformedTask.id ? transformedTask : task
+            ),
+          })),
+        });
+      }
+    },
+    onError: (_err, _variables, context) => {
       if (context?.previousBoard) {
         queryClient.setQueryData(
           boardKeys.board(boardId),
@@ -368,7 +514,7 @@ export const useReorderMutation = (boardId: string) => {
       }
       return response.data;
     },
-    onError: (err) => {
+    onError: (_err) => {
       // En cas d'erreur, on peut soit rollback soit refetch
       queryClient.invalidateQueries({ queryKey: boardKeys.board(boardId) });
     },

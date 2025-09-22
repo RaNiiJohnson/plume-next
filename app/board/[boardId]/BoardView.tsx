@@ -41,8 +41,15 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
   const handleTaskEditStart = (taskId: string) => setEditingTaskId(taskId);
   const handleTaskEditEnd = () => setEditingTaskId(null);
 
+  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) handleTaskEditEnd();
+  };
+
   return (
-    <div className="h-full w-full flex flex-col min-w-0">
+    <div
+      className="h-full w-full flex flex-col min-w-0"
+      onClick={handleBackgroundClick}
+    >
       {/* Header du board */}
       <div className="flex items-center justify-between mb-8 flex-shrink-0 p-6">
         <div className="flex items-center gap-4">

@@ -91,10 +91,24 @@ export const deleteTaskSafeAction = actionUser
 export const updateTaskSafeAction = actionUser
   .inputSchema(updateTaskSchema)
   .action(async ({ parsedInput }) => {
+    // Construire l'objet de données dynamiquement
+    const updateData: any = {};
+
+    if (parsedInput.content !== undefined) {
+      updateData.content = parsedInput.content;
+    }
+    if (parsedInput.description !== undefined) {
+      updateData.description = parsedInput.description;
+    }
+    if (parsedInput.dueDate !== undefined) {
+      updateData.dueDate = parsedInput.dueDate;
+    }
+
     const updatedTask = await prisma.task.update({
       where: { id: parsedInput.taskId },
-      data: { content: parsedInput.content },
+      data: updateData,
     });
+
     revalidatePath(`/board/${parsedInput.boardId}`);
     return { success: true, task: updatedTask };
   });
