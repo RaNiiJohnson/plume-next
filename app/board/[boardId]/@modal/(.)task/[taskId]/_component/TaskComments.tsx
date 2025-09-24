@@ -1,13 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
-import { MessageCircle, Send } from "lucide-react";
-import { useAction } from "next-safe-action/hooks";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { addCommentToTaskSafeAction } from "@app/board/[boardId]/(task)/task.action";
-import { useRouter } from "next/navigation";
+import { Send } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { FormEvent, useOptimistic, useState, useTransition } from "react";
 
 interface Comment {
   id: string;
@@ -33,17 +32,21 @@ export function TaskComments({
   currentUserId,
   initialComments,
 }: TaskCommentsProps) {
-  const [newComment, setNewComment] = useState("");
-  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [commentInput, setCommentInput] = useState("");
+
+  // useOptimistic pour gérer la liste des commentaires avec les ajouts optimistes
+  const [optimisticComments, addOptimisticComment] = useOptimistic(
+    initialComments,
+    (state: Comment[], newComment: Comment) => [...state, newComment]
+  );
 
   // Action pour ajouter un commentaire
   const { execute: addComment, isExecuting } = useAction(
     addCommentToTaskSafeAction,
     {
       onSuccess: () => {
-        setNewComment("");
-        // Rafraîchir la page pour voir le nouveau commentaire
-        router.refresh();
+        setCommentInput("");
       },
       onError: (error) => {
         console.error("Error adding comment:", error);
@@ -51,16 +54,36 @@ export function TaskComments({
     }
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
 
-    addComment({
-      taskId,
-      boardId,
-      authorId: currentUserId,
-      content: newComment.trim(),
+    if (!commentInput.trim()) return;
+
+    const optimisticComment: Comment = {
+      id: `temp-${Date.now()}`, // ID temporaire
+      content: commentInput.trim(),
+      createdAt: new Date(),
+      author: {
+        id: currentUserId,
+        name: "You", // Nom temporaire
+        image: null,
+      },
+    };
+
+    startTransition(() => {
+      // Ajouter le commentaire optimiste
+      addOptimisticComment(optimisticComment);
+
+      // Exécuter l'action
+      addComment({
+        taskId,
+        boardId,
+        authorId: currentUserId,
+        content: commentInput.trim(),
+      });
     });
+
+    setCommentInput("");
   };
 
   const formatDate = (date: Date) => {
@@ -75,9 +98,9 @@ export function TaskComments({
   return (
     <div className="space-y-4">
       {/* Liste des commentaires */}
-      {initialComments.length > 0 ? (
+      {optimisticComments.length > 0 && (
         <div className="space-y-3 max-h-60 overflow-y-auto">
-          {initialComments.map((comment: Comment) => (
+          {optimisticComments.map((comment: Comment) => (
             <div
               key={comment.id}
               className="flex gap-3 p-3 bg-muted/20 rounded-lg"
@@ -90,7 +113,7 @@ export function TaskComments({
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-sm">
+                  <span className="font-bold text-sm text-primary">
                     {comment.author.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
@@ -104,26 +127,20 @@ export function TaskComments({
             </div>
           ))}
         </div>
-      ) : (
-        <div className="text-center py-6 text-muted-foreground">
-          <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No comments yet</p>
-        </div>
       )}
 
       {/* Formulaire pour ajouter un commentaire */}
       <form onSubmit={handleSubmit} className="space-y-3">
-        <Textarea
-          placeholder="Ajouter un commentaire..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className="min-h-[80px] resize-none"
+        <Input
+          placeholder="Write a comment..."
+          value={commentInput}
+          onChange={(e) => setCommentInput(e.target.value)}
           disabled={isExecuting}
         />
         <div className="flex justify-end">
           <Button
             type="submit"
-            disabled={!newComment.trim() || isExecuting}
+            disabled={!commentInput.trim() || isExecuting}
             size="sm"
             className="gap-2"
           >
