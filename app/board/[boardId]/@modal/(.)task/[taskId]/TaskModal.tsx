@@ -12,8 +12,14 @@ import {
 } from "@/components/ui/popover";
 
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Task } from "@/generated/prisma";
 import { Board } from "@/lib/types/type";
+import { TaskComments } from "@app/board/[boardId]/@modal/(.)task/[taskId]/_component/TaskComments";
 import {
   boardKeys,
   useUpdateTaskMutation,
@@ -24,7 +30,6 @@ import { parseDate } from "chrono-node";
 import { CalendarIcon, Clock, Plus, Save, Tag, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useOptimistic, useState, useTransition } from "react";
-import { TaskComments } from "@app/board/[boardId]/@modal/(.)task/[taskId]/_component/TaskComments";
 
 function formatDate(date: Date | undefined) {
   if (!date) {
@@ -65,7 +70,7 @@ export function TaskModal({
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isEditingDate, setIsEditingDate] = useState(!task.dueDate);
 
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const [description, setDescription] = useOptimistic(
     task.description || "",
@@ -81,6 +86,11 @@ export function TaskModal({
     task.description || ""
   );
   const [tempDateInput, setTempDateInput] = useState("");
+
+  // États pour la gestion des tags
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [newTagInput, setNewTagInput] = useState("");
+  const [showPredefinedTags, setShowPredefinedTags] = useState(false);
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -151,6 +161,58 @@ export function TaskModal({
       startTransition(() => {
         setDueDate(task.dueDate ? new Date(task.dueDate) : undefined);
       });
+    }
+  };
+
+  // Fonctions pour la gestion des tags
+  const handleAddTag = async (tagName: string) => {
+    if (!tagName.trim()) return;
+
+    const currentTags = task.tags || [];
+    if (currentTags.includes(tagName.trim())) {
+      setNewTagInput("");
+      setIsAddingTag(false);
+      setShowPredefinedTags(false);
+      return; // Tag déjà existant
+    }
+
+    const newTags = [...currentTags, tagName.trim()];
+
+    try {
+      await updateTaskTagsMutation.mutateAsync({
+        taskId: task.id,
+        tags: newTags,
+      });
+      setNewTagInput("");
+      setIsAddingTag(false);
+      setShowPredefinedTags(false);
+    } catch (error) {
+      console.error("Error adding tag:", error);
+    }
+  };
+
+  const handleRemoveTag = async (tagToRemove: string) => {
+    const currentTags = task.tags || [];
+    const newTags = currentTags.filter((tag) => tag !== tagToRemove);
+
+    try {
+      await updateTaskTagsMutation.mutateAsync({
+        taskId: task.id,
+        tags: newTags,
+      });
+    } catch (error) {
+      console.error("Error removing tag:", error);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && newTagInput.trim()) {
+      e.preventDefault();
+      handleAddTag(newTagInput);
+    } else if (e.key === "Escape") {
+      setIsAddingTag(false);
+      setNewTagInput("");
+      setShowPredefinedTags(false);
     }
   };
 
@@ -460,62 +522,154 @@ export function TaskModal({
                   )}
                 </div>
               ) : (
-                <div
-                  onClick={() => {
-                    setIsEditingDate(true);
-                    setTempDateInput(formatDate(dueDate));
-                    setDate(dueDate);
-                    setMonth(dueDate);
-                  }}
-                  className="flex cursor-pointer bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md p-3"
-                >
-                  <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                    <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                      <span>📅</span>
-                      <span>Due date set for</span>
-                      <span className="font-medium">{formatDate(dueDate)}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      onClick={() => {
+                        setIsEditingDate(true);
+                        setTempDateInput(formatDate(dueDate));
+                        setDate(dueDate);
+                        setMonth(dueDate);
+                      }}
+                      className="flex cursor-pointer bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md p-3"
+                    >
+                      <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                        <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                          <span>📅</span>
+                          <span>Due date set for</span>
+                          <span className="font-medium">
+                            {formatDate(dueDate)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-1"></div>
                     </div>
-                  </div>
-                  <div className="flex-1"></div>
-                </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Click to edit</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
             </div>
             {/* Tags Section */}
-            {task.tags && task.tags.length > 0 ? (
-              <div className="bg-card border border-border/50 rounded-lg p-4 space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Tag className="w-4 h-4 text-green-500" />
-                  <span>Tags</span>
+            <div className="bg-card border border-border/50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Tag className="w-4 h-4 text-green-500" />
+                <span>Tags</span>
+                {task.tags && task.tags.length > 0 && (
                   <span className="text-xs text-muted-foreground">
                     ({task.tags.length})
                   </span>
-                </div>
+                )}
+              </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {task.tags.map((tag, index) => (
+              <div className="flex flex-wrap gap-2">
+                {task.tags &&
+                  task.tags.map((tag, index) => (
                     <div key={`${tag}-${index}`} className="group relative">
                       <Badge
                         variant="secondary"
                         className={`${getTagColor(
                           tag
                         )} text-white text-xs px-3 py-1 rounded-full 
-                          shadow-sm hover:shadow-md border-0`}
+                        shadow-sm hover:shadow-md border-0 group-hover:pr-6 transition-all`}
                       >
                         <span className="flex items-center gap-1.5">
                           <div className="w-1.5 h-1.5 bg-white/70 rounded-full"></div>
                           {tag}
                         </span>
+                        <button
+                          onClick={() => handleRemoveTag(tag)}
+                          className="absolute cursor-pointer right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 
+                                 text-white/70 hover:text-white transition-opacity"
+                          aria-label={`Remove ${tag} tag`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                       </Badge>
                     </div>
                   ))}
-                  <Badge variant="outline" className="cursor-pointer">
-                    <Plus />
-                  </Badge>
-                </div>
+
+                {/* Bouton d'ajout ou input */}
+                {isAddingTag ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={newTagInput}
+                      onChange={(e) => setNewTagInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Enter tag name..."
+                      className="h-7 text-xs w-32"
+                      autoFocus
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleAddTag(newTagInput)}
+                      disabled={
+                        !newTagInput.trim() || updateTaskTagsMutation.isPending
+                      }
+                      className="h-7 px-2"
+                    >
+                      <Save className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setIsAddingTag(false);
+                        setNewTagInput("");
+                        setShowPredefinedTags(false);
+                      }}
+                      className="h-7 px-2"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer hover:bg-muted"
+                      onClick={() => setIsAddingTag(true)}
+                    >
+                      <Plus className="w-3 h-3" />
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowPredefinedTags(!showPredefinedTags)}
+                      className="h-7 px-2 text-xs"
+                    >
+                      Quick tags
+                    </Button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <Button variant="outline">Add tags</Button>
-            )}
+
+              {/* Tags prédéfinis */}
+              {showPredefinedTags && (
+                <div className="border-t border-border/50 pt-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">Quick add:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {predefinedTags
+                      .filter(
+                        (predefinedTag) =>
+                          !task.tags?.includes(predefinedTag.name)
+                      )
+                      .map((predefinedTag) => (
+                        <button
+                          key={predefinedTag.name}
+                          onClick={() => handleAddTag(predefinedTag.name)}
+                          disabled={updateTaskTagsMutation.isPending}
+                          className={`${predefinedTag.color} text-white text-xs px-2 py-1 rounded-full 
+                                   hover:shadow-md transition-shadow disabled:opacity-50`}
+                        >
+                          {predefinedTag.name}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
