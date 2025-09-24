@@ -220,16 +220,35 @@ export default function SortableTask({
   //   };
   // }, [isEditing, onEditEnd]);
 
+
   const predefinedTags = [
-    { name: "urgent", color: "bg-red-500" },
-    { name: "important", color: "bg-orange-500" },
-    { name: "bug", color: "bg-red-600" },
-    { name: "feature", color: "bg-blue-500" },
-    { name: "enhancement", color: "bg-green-500" },
-    { name: "documentation", color: "bg-purple-500" },
-    { name: "testing", color: "bg-yellow-700" },
-    { name: "review", color: "bg-indigo-500" },
+    { name: "urgent", color: "bg-gradient-to-r from-red-500 to-red-600" },
+    {
+      name: "important",
+      color: "bg-gradient-to-r from-orange-500 to-orange-600",
+    },
+    { name: "bug", color: "bg-gradient-to-r from-red-600 to-red-700" },
+    { name: "feature", color: "bg-gradient-to-r from-blue-500 to-blue-600" },
+    {
+      name: "enhancement",
+      color: "bg-gradient-to-r from-green-500 to-green-600",
+    },
+    {
+      name: "documentation",
+      color: "bg-gradient-to-r from-purple-500 to-purple-600",
+    },
+    {
+      name: "testing",
+      color: "bg-gradient-to-r from-yellow-600 to-yellow-700",
+    },
+    { name: "review", color: "bg-gradient-to-r from-indigo-500 to-indigo-600" },
+    { name: "design", color: "bg-gradient-to-r from-pink-500 to-pink-600" },
+    { name: "backend", color: "bg-gradient-to-r from-gray-600 to-gray-700" },
+    { name: "frontend", color: "bg-gradient-to-r from-cyan-500 to-cyan-600" },
+    { name: "api", color: "bg-gradient-to-r from-teal-500 to-teal-600" },
   ];
+
+  
 
   const handleTagToggle = (tagName: string) => {
     setSelectedTags((prev) =>
