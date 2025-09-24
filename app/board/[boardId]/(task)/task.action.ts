@@ -113,6 +113,48 @@ export const updateTaskSafeAction = actionUser
     return { success: true, task: updatedTask };
   });
 
+export const addCommentToTaskSafeAction = actionUser
+  .inputSchema(
+    z.object({
+      taskId: z.string(),
+      boardId: z.string(),
+      authorId: z.string(),
+      content: z.string().min(1, "Comment cannot be empty"),
+    })
+  )
+  .action(async ({ parsedInput }) => {
+    try {
+      const newComment = await prisma.comment.create({
+        data: {
+          content: parsedInput.content,
+          taskId: parsedInput.taskId,
+          authorId: parsedInput.authorId,
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
+      });
+
+      revalidatePath(`/board/${parsedInput.boardId}`);
+      return { success: true, comment: newComment };
+    } catch (error) {
+      console.error("Error adding comment to task:", error);
+      return {
+        error: "Failed to add comment to task.",
+        details: (error as Error).message,
+      };
+    }
+  });
+
+// Schéma Zod pour valider le payload de réordonnancement
+// Utilisation de z.discriminatedUnion pour gérer plusieurs types d'actions de réordonnancement
+
 const ReorderPayloadSchema = z.discriminatedUnion("type", [
   // Cas 1: Réordonner les tâches dans la même colonne
   z.object({

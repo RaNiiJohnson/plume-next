@@ -11,7 +11,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { parseDate } from "chrono-node";
+import { Textarea } from "@/components/ui/textarea";
 import { Task } from "@/generated/prisma";
 import { Board } from "@/lib/types/type";
 import {
@@ -20,12 +20,11 @@ import {
   useUpdateTaskTagsMutation,
 } from "@app/board/[boardId]/_hooks/useBoardQueries";
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarIcon, Clock, Plus, Tag, X } from "lucide-react";
+import { parseDate } from "chrono-node";
+import { CalendarIcon, Clock, Plus, Save, Tag, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useOptimistic, useState, useTransition } from "react";
-import { Textarea } from "@/components/ui/textarea";
-import { set } from "zod";
-import { Alert } from "@/components/ui/alert";
+import { TaskComments } from "@app/board/[boardId]/@modal/(.)task/[taskId]/_component/TaskComments";
 
 function formatDate(date: Date | undefined) {
   if (!date) {
@@ -38,7 +37,26 @@ function formatDate(date: Date | undefined) {
   });
 }
 
-export function TaskModal({ boardId, task }: { boardId: string; task: Task }) {
+export function TaskModal({
+  boardId,
+  task,
+  currentUserId,
+}: {
+  boardId: string;
+  task: Task & {
+    comments: Array<{
+      id: string;
+      content: string;
+      createdAt: Date;
+      author: {
+        id: string;
+        name: string;
+        image: string | null;
+      };
+    }>;
+  };
+  currentUserId: string;
+}) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(
     task.dueDate ? new Date(task.dueDate) : undefined
@@ -259,11 +277,12 @@ export function TaskModal({ boardId, task }: { boardId: string; task: Task }) {
                     value={tempDescription}
                     onChange={(e) => setTempDescription(e.target.value)}
                   />
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 justify-end">
                     <Button
                       onClick={handleSaveDescription}
                       disabled={isLoading || !tempDescription.trim()}
                     >
+                      <Save />
                       {isLoading ? "Saving..." : "Save"}
                     </Button>
                     {description && (
@@ -280,8 +299,8 @@ export function TaskModal({ boardId, task }: { boardId: string; task: Task }) {
                   </div>
                 </>
               ) : (
-                <div className="group flex bg-muted/30 rounded-lg p-4 text-sm">
-                  <div className="text-muted-foreground whitespace-pre-wrap">
+                <div className="group flex bg-muted/20 rounded-lg p-4 text-sm">
+                  <div className="text-secondary-foreground/70 whitespace-pre-wrap">
                     {description}
                   </div>
                   <div className="flex-1"></div>
@@ -300,6 +319,18 @@ export function TaskModal({ boardId, task }: { boardId: string; task: Task }) {
                 </div>
               )}
             </div>
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <div className="w-1 h-5 bg-blue-500 rounded-full"></div>
+                Comments
+              </h3>
+              <TaskComments
+                taskId={task.id}
+                boardId={boardId}
+                currentUserId={currentUserId}
+                initialComments={task.comments}
+              />
+            </div>
           </div>
 
           {/* Sidebar */}
@@ -310,7 +341,7 @@ export function TaskModal({ boardId, task }: { boardId: string; task: Task }) {
                 <Clock className="w-4 h-4 text-blue-500" />
                 <span>Due Date</span>
                 <div className="flex-1"></div>
-                {!(!dueDate || isEditingDate) && (
+                {/* {!(!dueDate || isEditingDate) && (
                   <div className="flex gap-1">
                     <Button
                       onClick={() => {
@@ -326,7 +357,7 @@ export function TaskModal({ boardId, task }: { boardId: string; task: Task }) {
                       Edit
                     </Button>
                   </div>
-                )}
+                )} */}
               </div>
 
               {!dueDate || isEditingDate ? (
@@ -396,6 +427,7 @@ export function TaskModal({ boardId, task }: { boardId: string; task: Task }) {
                         onClick={() => handleSaveDueDate(date)}
                         disabled={isLoading}
                         size="sm"
+                        className="h-6 px-2 text-xs"
                       >
                         Save
                       </Button>
@@ -409,6 +441,7 @@ export function TaskModal({ boardId, task }: { boardId: string; task: Task }) {
                               setDate(dueDate);
                             }}
                             size="sm"
+                            className="h-6 px-2 text-xs"
                           >
                             Cancel
                           </Button>
@@ -417,6 +450,7 @@ export function TaskModal({ boardId, task }: { boardId: string; task: Task }) {
                             variant="destructive"
                             onClick={handleRemoveDueDate}
                             size="sm"
+                            className="h-6 px-2 text-xs"
                           >
                             Remove
                           </Button>
@@ -426,7 +460,15 @@ export function TaskModal({ boardId, task }: { boardId: string; task: Task }) {
                   )}
                 </div>
               ) : (
-                <div className="flex bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md p-3">
+                <div
+                  onClick={() => {
+                    setIsEditingDate(true);
+                    setTempDateInput(formatDate(dueDate));
+                    setDate(dueDate);
+                    setMonth(dueDate);
+                  }}
+                  className="flex cursor-pointer bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md p-3"
+                >
                   <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
                     <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
                       <span>📅</span>
