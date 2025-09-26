@@ -152,6 +152,93 @@ export const addCommentToTaskSafeAction = actionUser
     }
   });
 
+export const updateCommentSafeAction = actionUser
+  .inputSchema(
+    z.object({
+      commentId: z.string(),
+      boardId: z.string(),
+      content: z.string().min(1, "Comment cannot be empty"),
+    })
+  )
+  .action(async ({ parsedInput, ctx }) => {
+    try {
+      // Vérifier que l'utilisateur est l'auteur du commentaire
+      const existingComment = await prisma.comment.findUnique({
+        where: { id: parsedInput.commentId },
+        select: { authorId: true },
+      });
+
+      if (!existingComment) {
+        return { error: "Comment not found." };
+      }
+
+      if (existingComment.authorId !== ctx.user.id) {
+        return { error: "You can only edit your own comments." };
+      }
+
+      const updatedComment = await prisma.comment.update({
+        where: { id: parsedInput.commentId },
+        data: { content: parsedInput.content },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
+      });
+
+      revalidatePath(`/board/${parsedInput.boardId}`);
+      return { success: true, comment: updatedComment };
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      return {
+        error: "Failed to update comment.",
+        details: (error as Error).message,
+      };
+    }
+  });
+
+export const deleteCommentSafeAction = actionUser
+  .inputSchema(
+    z.object({
+      commentId: z.string(),
+      boardId: z.string(),
+    })
+  )
+  .action(async ({ parsedInput, ctx }) => {
+    try {
+      // Vérifier que l'utilisateur est l'auteur du commentaire
+      const existingComment = await prisma.comment.findUnique({
+        where: { id: parsedInput.commentId },
+        select: { authorId: true },
+      });
+
+      if (!existingComment) {
+        return { error: "Comment not found." };
+      }
+
+      if (existingComment.authorId !== ctx.user.id) {
+        return { error: "You can only delete your own comments." };
+      }
+
+      await prisma.comment.delete({
+        where: { id: parsedInput.commentId },
+      });
+
+      revalidatePath(`/board/${parsedInput.boardId}`);
+      return { success: true, message: "Comment deleted successfully." };
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      return {
+        error: "Failed to delete comment.",
+        details: (error as Error).message,
+      };
+    }
+  });
+
 // Schéma Zod pour valider le payload de réordonnancement
 // Utilisation de z.discriminatedUnion pour gérer plusieurs types d'actions de réordonnancement
 
