@@ -42,5 +42,13 @@ export default async function TaskModalPage({ params }: TaskModalPageProps) {
     return <div>Task not found</div>;
   }
 
-  return <TaskModal boardId={boardId} task={task} currentUserId={user.id} />;
+  return (
+    <TaskModal
+      boardId={boardId}
+      task={task}
+      currentUserId={user.id}
+      currentUserName={user.name}
+      currentUserImage={user.image || null}
+    />
+  );
 }
