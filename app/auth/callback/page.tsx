@@ -36,7 +36,7 @@ export default function AuthCallback() {
       <div className="text-center space-y-4">
         <Loader2 className="w-8 h-8 animate-spin mx-auto" />
         <p className="text-sm text-muted-foreground">
-          Finalisation de votre compte...
+          Finalizing your account...
         </p>
       </div>
     </div>
