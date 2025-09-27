@@ -6,7 +6,7 @@
 # https://github.com/github/super-linter
 name: Code Quality Checks
 
-concurency:
+concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
