@@ -10,7 +10,7 @@
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "lint": "next lint"
+    "test:ci": "vitest run"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
