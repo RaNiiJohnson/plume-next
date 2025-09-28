@@ -92,7 +92,7 @@ export const updateTaskSafeAction = actionUser
   .inputSchema(updateTaskSchema)
   .action(async ({ parsedInput }) => {
     // Construire l'objet de données dynamiquement
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     if (parsedInput.content !== undefined) {
       updateData.content = parsedInput.content;

@@ -5,7 +5,11 @@ import {
 import { addTaskSafeAction, deleteTaskSafeAction } from "../(task)/task.action";
 
 export class BoardOperations {
-  constructor(private executeReorder: any) {}
+  constructor(
+    private executeReorder: (
+      payload: any
+    ) => Promise<{ data?: { success: boolean } }>
+  ) {}
 
   async addColumn(title: string, boardId: string) {
     try {
@@ -101,7 +105,7 @@ export class BoardOperations {
       } else {
         return {
           success: false,
-          error: result.data?.error || "Reorder failed",
+          error: "Reorder failed",
         };
       }
     } catch (error) {
@@ -128,7 +132,7 @@ export class BoardOperations {
       } else {
         return {
           success: false,
-          error: result.data?.error || "Reorder failed",
+          error: "Reorder failed",
         };
       }
     } catch (error) {
@@ -157,7 +161,7 @@ export class BoardOperations {
       if (result.data?.success) {
         return { success: true };
       } else {
-        return { success: false, error: result.data?.error || "Move failed" };
+        return { success: false, error: "Move failed" };
       }
     } catch (error) {
       console.error("Move between columns failed:", error);

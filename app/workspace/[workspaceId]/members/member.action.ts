@@ -28,10 +28,6 @@ export const removeMember = async (member: Member) => {
   }
 };
 
-type UpdateMemberParams = {
-  member: Member;
-  role: "member" | "admin";
-};
 export const updateMember = async (
   member: Member,
   role: "member" | "admin"

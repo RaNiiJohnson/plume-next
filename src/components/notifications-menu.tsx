@@ -101,7 +101,7 @@ export async function NotificationsMenu() {
                       className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-primary/30"
                     >
                       <Users className="w-4 h-4" />
-                      You've been invited...
+                      You&apos;ve been invited...
                     </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>

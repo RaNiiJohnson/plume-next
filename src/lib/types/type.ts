@@ -31,6 +31,7 @@ export const TaskSchema = z.object({
   content: z.string(),
   description: z.string().optional(),
   position: z.number(),
+  createdAt: z.date(),
   columnId: z.string(),
   tags: z.array(z.string()).optional(),
   dueDate: z.date().nullable().optional(),

@@ -7,11 +7,11 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { Column, Task } from "@/lib/types/type";
+import { Board, Column, Task } from "@/lib/types/type";
 import { UseMutationResult } from "@tanstack/react-query";
 
 interface UseDragAndDropProps {
-  board: any;
+  board: Board;
   findColumn: (id: string | null) => Column | undefined;
   reorderColumns: (columns: Column[]) => void;
   reorderTasksInColumn: (columnId: string, tasks: Task[]) => void;
@@ -22,7 +22,35 @@ interface UseDragAndDropProps {
     destTasks: Task[]
   ) => void;
   rollbackColumn: (columns: Column[]) => void;
-  reorderMutation: UseMutationResult<any, Error, any, unknown>;
+  reorderMutation: UseMutationResult<
+    { success: boolean },
+    Error,
+    {
+      type: "reorderColumns";
+      boardId: string;
+      columns: Array<{ id: string; position: number }>;
+    },
+    unknown
+  >;
+  taskReorderMutation: UseMutationResult<
+    { success: boolean },
+    Error,
+    | {
+        type: "reorderSameColumn";
+        boardId: string;
+        columnId: string;
+        tasks: Array<{ id: string; position: number }>;
+      }
+    | {
+        type: "moveBetweenColumns";
+        boardId: string;
+        taskId: string;
+        newColumnId: string;
+        sourceColumnTasks: Array<{ id: string; position: number }>;
+        destinationColumnTasks: Array<{ id: string; position: number }>;
+      },
+    unknown
+  >;
 }
 
 export const useDragAndDrop = ({
@@ -33,6 +61,7 @@ export const useDragAndDrop = ({
   moveTaskBetweenColumns,
   rollbackColumn,
   reorderMutation,
+  taskReorderMutation,
 }: UseDragAndDropProps) => {
   const [activeItem, setActiveItem] = useState<Task | Column | null>(null);
   const [draggedItemWidth, setDraggedItemWidth] = useState<number | null>(null);
@@ -112,7 +141,7 @@ export const useDragAndDrop = ({
           })),
         });
       } catch (error) {
-        alert("Erreur lors de la réorganisation des colonnes.");
+        alert("Erreur lors de la réorganisation des colonnes." + error);
         rollbackColumn(board.columns);
       }
     },
@@ -176,7 +205,7 @@ export const useDragAndDrop = ({
         reorderTasksInColumn(sourceColumn.id, updatedTasks);
 
         try {
-          await reorderMutation.mutateAsync({
+          await taskReorderMutation.mutateAsync({
             type: "reorderSameColumn",
             boardId: board.id,
             columnId: sourceColumn.id,
@@ -186,7 +215,7 @@ export const useDragAndDrop = ({
             })),
           });
         } catch (error) {
-          alert("Erreur lors du réordonnancement.");
+          alert("Erreur lors du réordonnancement." + error);
         }
       } else {
         // Between columns move
@@ -220,7 +249,7 @@ export const useDragAndDrop = ({
         );
 
         try {
-          await reorderMutation.mutateAsync({
+          await taskReorderMutation.mutateAsync({
             type: "moveBetweenColumns",
             boardId: board.id,
             taskId: activeTask.id,
@@ -235,7 +264,9 @@ export const useDragAndDrop = ({
             })),
           });
         } catch (error) {
-          alert("Erreur lors du déplacement. La page va être rechargée.");
+          alert(
+            "Erreur lors du déplacement. La page va être rechargée." + error
+          );
           window.location.reload();
         }
       }
@@ -245,7 +276,7 @@ export const useDragAndDrop = ({
       board,
       reorderTasksInColumn,
       moveTaskBetweenColumns,
-      reorderMutation,
+      taskReorderMutation,
     ]
   );
 

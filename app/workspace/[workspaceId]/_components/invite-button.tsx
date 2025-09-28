@@ -60,7 +60,7 @@ export function InviteButton({ organizationId }: InviteButtonProps) {
         toast.error(result.error || "Failed to send invitation");
       }
     } catch (error) {
-      toast.error("An error occurred while sending the invitation");
+      toast.error("An error occurred while sending the invitation " + error);
     } finally {
       setIsLoading(false);
     }

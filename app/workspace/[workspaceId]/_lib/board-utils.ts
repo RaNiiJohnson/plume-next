@@ -1,13 +1,18 @@
 // Board statistics and utility functions
 
-export const getBoardStats = (board: any) => {
+import { Task } from "@/lib/types/type";
+
+export const getBoardStats = (board: {
+  createdAt: Date;
+  columns: Array<{ tasks: Task[] }>;
+}) => {
   const totalTasks = board.columns.reduce(
-    (acc: number, column: any) => acc + column._count.tasks,
+    (acc: number, column: { tasks: Task[] }) => acc + column.tasks.length,
     0
   );
 
   const lastColumn = board.columns[board.columns.length - 1];
-  const completedTasks = lastColumn ? lastColumn._count.tasks : 0;
+  const completedTasks = lastColumn ? lastColumn.tasks.length : 0;
 
   const pendingTasks = totalTasks - completedTasks;
   const completionRate =
@@ -15,8 +20,8 @@ export const getBoardStats = (board: any) => {
 
   let lastActivity = new Date(board.createdAt).getTime();
 
-  board.columns.forEach((column: any) => {
-    column.tasks.forEach((task: any) => {
+  board.columns.forEach((column: { tasks: Task[] }) => {
+    column.tasks.forEach((task: Task) => {
       const taskTime = new Date(task.createdAt).getTime();
       if (taskTime > lastActivity) {
         lastActivity = taskTime;
@@ -100,21 +105,36 @@ export const getBoardColor = (index: number) => {
   return colors[index % colors.length];
 };
 
-export const calculateBoardsStats = (boards: any[]) => {
+export const calculateBoardsStats = (
+  boards: Array<{
+    createdAt: Date;
+    columns: Array<{
+      _count: { tasks: number };
+      tasks: Array<{ id: string; createdAt: Date }>;
+    }>;
+  }>
+) => {
+  const totalTasks = boards.reduce(
+    (acc, board) =>
+      acc +
+      board.columns.reduce((colAcc, column) => colAcc + column._count.tasks, 0),
+    0
+  );
+
+  const completedTasks = boards.reduce((acc, board) => {
+    // Assume last column is completed tasks
+    const lastColumn = board.columns[board.columns.length - 1];
+    return acc + (lastColumn ? lastColumn._count.tasks : 0);
+  }, 0);
+
   return [
     {
       title: "Total Tasks",
-      value: boards.reduce(
-        (acc, board) => acc + getBoardStats(board).totalTasks,
-        0
-      ),
+      value: totalTasks,
     },
     {
       title: "Completed",
-      value: boards.reduce(
-        (acc, board) => acc + getBoardStats(board).completedTasks,
-        0
-      ),
+      value: completedTasks,
     },
     {
       title: "Active Boards",

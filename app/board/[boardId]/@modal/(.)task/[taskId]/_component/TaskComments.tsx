@@ -109,14 +109,11 @@ export function TaskComments({
     }
   );
 
-  const { execute: deleteComment, isExecuting: isDeletingComment } = useAction(
-    deleteCommentSafeAction,
-    {
-      onError: (error) => {
-        console.error("Error deleting comment:", error);
-      },
-    }
-  );
+  const { execute: deleteComment } = useAction(deleteCommentSafeAction, {
+    onError: (error) => {
+      console.error("Error deleting comment:", error);
+    },
+  });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();

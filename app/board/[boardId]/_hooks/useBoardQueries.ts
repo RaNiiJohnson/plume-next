@@ -23,6 +23,8 @@ const transformPrismaTask = (prismaTask: PrismaTask): Task => ({
   position: prismaTask.position,
   columnId: prismaTask.columnId,
   tags: prismaTask.tags.length > 0 ? prismaTask.tags : undefined,
+  dueDate: prismaTask.dueDate || undefined,
+  createdAt: prismaTask.createdAt,
 });
 
 // Helper function to transform Prisma Column to frontend Column
@@ -94,7 +96,7 @@ export const useAddColumnMutation = (boardId: string) => {
 
       return { previousBoard };
     },
-    onSuccess: (newColumn, _variables, _context) => {
+    onSuccess: (newColumn) => {
       // Replace temp column with real one
       const currentBoard = queryClient.getQueryData<Board>(
         boardKeys.board(boardId)
@@ -102,7 +104,7 @@ export const useAddColumnMutation = (boardId: string) => {
       if (currentBoard) {
         // Transform the Prisma column to frontend format if needed
         const transformedColumn: Column = newColumn.tasks
-          ? transformPrismaColumn(newColumn as any)
+          ? transformPrismaColumn(newColumn)
           : {
               id: newColumn.id,
               title: newColumn.title,
@@ -212,6 +214,7 @@ export const useAddTaskMutation = (boardId: string) => {
           content,
           position,
           columnId,
+          createdAt: new Date(),
         };
 
         queryClient.setQueryData<Board>(boardKeys.board(boardId), {
@@ -226,7 +229,7 @@ export const useAddTaskMutation = (boardId: string) => {
 
       return { previousBoard };
     },
-    onSuccess: (newTask, variables, _context) => {
+    onSuccess: (newTask, variables) => {
       const currentBoard = queryClient.getQueryData<Board>(
         boardKeys.board(boardId)
       );
@@ -502,20 +505,94 @@ export const useUpdateTaskTagsMutation = (boardId: string) => {
   });
 };
 
-// Mutation pour le drag & drop
+// Mutation pour le drag & drop des colonnes
 export const useReorderMutation = (boardId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: {
+      boardId: string;
+      columns: Array<{
+        id: string;
+        position: number;
+        tasks: Array<{ id: string; position: number; columnId: string }>;
+      }>;
+    }) => {
+      const reorderPayload = {
+        type: "reorderColumns" as const,
+        boardId: payload.boardId,
+        columns: payload.columns.map((col) => ({
+          id: col.id,
+          position: col.position,
+        })),
+      };
+      const response = await reorderTasksAndColumnsSafeAction(reorderPayload);
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || "Failed to reorder");
+      }
+      return response.data;
+    },
+    onError: (err) => {
+      // En cas d'erreur, on peut soit rollback soit refetch
+      console.log(err);
+      queryClient.invalidateQueries({ queryKey: boardKeys.board(boardId) });
+    },
+  });
+};
+
+// Mutation simple pour le réordonnancement des colonnes
+export const useColumnReorderMutation = (boardId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: {
+      type: "reorderColumns";
+      boardId: string;
+      columns: Array<{ id: string; position: number }>;
+    }) => {
       const response = await reorderTasksAndColumnsSafeAction(payload);
       if (!response.data?.success) {
         throw new Error(response.data?.error || "Failed to reorder");
       }
       return response.data;
     },
-    onError: (_err) => {
-      // En cas d'erreur, on peut soit rollback soit refetch
+    onError: (err) => {
+      console.log(err);
+      queryClient.invalidateQueries({ queryKey: boardKeys.board(boardId) });
+    },
+  });
+};
+
+// Mutation pour le drag & drop des tâches
+export const useTaskReorderMutation = (boardId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      payload:
+        | {
+            type: "reorderSameColumn";
+            boardId: string;
+            columnId: string;
+            tasks: Array<{ id: string; position: number }>;
+          }
+        | {
+            type: "moveBetweenColumns";
+            boardId: string;
+            taskId: string;
+            newColumnId: string;
+            sourceColumnTasks: Array<{ id: string; position: number }>;
+            destinationColumnTasks: Array<{ id: string; position: number }>;
+          }
+    ) => {
+      const response = await reorderTasksAndColumnsSafeAction(payload);
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || "Failed to reorder");
+      }
+      return response.data;
+    },
+    onError: (err) => {
+      console.log(err);
       queryClient.invalidateQueries({ queryKey: boardKeys.board(boardId) });
     },
   });

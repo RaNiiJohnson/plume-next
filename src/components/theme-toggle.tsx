@@ -20,7 +20,7 @@ export function ThemeToggle() {
   );
 }
 export function ThemeToggleDark() {
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
   return (
     <SidebarMenuSubButton
       className="cursor-pointer"
@@ -32,7 +32,7 @@ export function ThemeToggleDark() {
   );
 }
 export function ThemeToggleLight() {
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
   return (
     <SidebarMenuSubButton
       className="cursor-pointer"
