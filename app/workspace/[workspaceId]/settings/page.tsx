@@ -71,7 +71,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
       <div className="text-center py-12">
         <h1 className="text-2xl font-bold mb-2">workspace not found</h1>
         <p className="text-muted-foreground">
-          The workspace you're looking for doesn't exist.
+          The workspace you&apos;re looking for doesn&apos;t exist.
         </p>
       </div>
     );

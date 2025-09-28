@@ -1,6 +1,6 @@
 import { getUser } from "@/lib/auth-server";
 import Link from "next/link";
-import { Button, buttonVariants } from "./ui/button";
+import { buttonVariants } from "./ui/button";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { LogIn, LogOut } from "lucide-react";

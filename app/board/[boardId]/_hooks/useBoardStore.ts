@@ -12,6 +12,8 @@ import {
   useUpdateTaskTagsMutation,
   useDeleteTaskMutation,
   useReorderMutation,
+  useColumnReorderMutation,
+  useTaskReorderMutation,
 } from "./useBoardQueries";
 
 export const useBoardStore = (boardId: string, initialBoard: Board) => {
@@ -28,6 +30,8 @@ export const useBoardStore = (boardId: string, initialBoard: Board) => {
   const updateTaskTagsMutation = useUpdateTaskTagsMutation(boardId);
   const deleteTaskMutation = useDeleteTaskMutation(boardId);
   const reorderMutation = useReorderMutation(boardId);
+  const columnReorderMutation = useColumnReorderMutation(boardId);
+  const taskReorderMutation = useTaskReorderMutation(boardId);
 
   // Utility functions
   const findColumn = (id: string | null): Column | undefined => {
@@ -158,7 +162,7 @@ export const useBoardStore = (boardId: string, initialBoard: Board) => {
     );
 
     // API call
-    await reorderMutation.mutateAsync({
+    await taskReorderMutation.mutateAsync({
       type: "moveBetweenColumns",
       boardId,
       taskId,
@@ -206,6 +210,7 @@ export const useBoardStore = (boardId: string, initialBoard: Board) => {
     isReordering: reorderMutation.isPending,
 
     // Reorder mutation for drag & drop
-    reorderMutation,
+    reorderMutation: columnReorderMutation,
+    taskReorderMutation,
   };
 };

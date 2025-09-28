@@ -104,8 +104,8 @@ export default async function InvitationPage(props: PageProps) {
               Invalid Invitation
             </CardTitle>
             <CardDescription>
-              This invitation was sent to {invitation.email}, but you're signed
-              in as {session.user.email}.
+              This invitation was sent to {invitation.email}, but you&apos;re
+              signed in as {session.user.email}.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -119,7 +119,7 @@ export default async function InvitationPage(props: PageProps) {
         <CardHeader>
           <CardTitle>Join Organization</CardTitle>
           <CardDescription>
-            You've been invited to join{" "}
+            You&apos;ve been invited to join{" "}
             <strong>{invitation.organization.name}</strong>
           </CardDescription>
         </CardHeader>

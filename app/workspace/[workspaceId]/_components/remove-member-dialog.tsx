@@ -40,7 +40,7 @@ export function RemoveMemberDialog({ member }: { member: MemberWithUser }) {
       toast.success("Member removed successfully");
       setOpen(false);
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      toast.error("An unexpected error occurred " + error);
     } finally {
       setIsLoading(false);
     }

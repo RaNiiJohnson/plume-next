@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
+import { auth } from "@/lib/auth"; // Votre instance Better Auth
 
-export function middleware(request: NextRequest) {
-  // Vérifier l'existence du cookie de session
-  const sessionCookie = getSessionCookie(request);
-
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Routes protégées qui nécessitent une authentification
-  const protectedRoutes = ["/workspace", "/board", "/invite", "notifications"];
+  const protectedRoutes = ["/workspace", "/board", "/invite", "/notifications"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
@@ -17,19 +14,37 @@ export function middleware(request: NextRequest) {
   const authRoutes = ["/auth/signin", "/auth/signup"];
   const isAuthRoute = authRoutes.includes(pathname);
 
-  // Si l'utilisateur n'est pas connecté et essaie d'accéder à une route protégée
-  if (!sessionCookie && isProtectedRoute) {
-    return NextResponse.redirect(new URL("/auth/signin", request.url));
+  // ✅ VALIDATION COMPLÈTE DE LA SESSION (pas juste le cookie)
+  let isAuthenticated = false;
+
+  try {
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+
+    isAuthenticated = !!(session?.session && session?.user);
+  } catch (error) {
+    console.log("Session validation failed:", error);
+    isAuthenticated = false;
   }
 
-  // Si l'utilisateur est connecté et essaie d'accéder aux pages d'auth
-  if (sessionCookie && isAuthRoute) {
-    return NextResponse.redirect(new URL("/", request.url));
+  // Routes protégées - rediriger si pas authentifié
+  if (!isAuthenticated && isProtectedRoute) {
+    const redirectUrl = new URL("/auth/signin", request.url);
+    redirectUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Pages d'auth - rediriger si déjà authentifié
+  if (isAuthenticated && isAuthRoute) {
+    const callbackUrl = request.nextUrl.searchParams.get("callbackUrl");
+    return NextResponse.redirect(new URL(callbackUrl || "/", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  runtime: "nodejs",
+  runtime: "nodejs", // ✅ Obligatoire pour Next.js 15.2.0+
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

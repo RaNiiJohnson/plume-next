@@ -14,20 +14,72 @@ import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { deleteBoardAction } from "../_actions";
 import {
-  getBoardStats,
   getActivityText,
   getProgressColor,
   getBoardColor,
 } from "../_lib/board-utils";
 
+type BoardWithStats = {
+  id: string;
+  title: string;
+  createdAt: Date;
+  userId: string | null;
+  description: string | null;
+  isPublic: boolean;
+  organizationId: string | null;
+  columns: Array<{
+    id: string;
+    title: string;
+    position: number;
+    boardId: string;
+    _count: { tasks: number };
+    tasks: Array<{ id: string; createdAt: Date }>;
+  }>;
+};
+
 type BoardCardProps = {
-  board: any;
+  board: BoardWithStats;
   index: number;
   workspaceId: string;
 };
 
 export function BoardCard({ board, index }: BoardCardProps) {
-  const stats = getBoardStats(board);
+  // Calculate stats directly from the _count data
+  const totalTasks = board.columns.reduce(
+    (acc, column) => acc + column._count.tasks,
+    0
+  );
+
+  const lastColumn = board.columns[board.columns.length - 1];
+  const completedTasks = lastColumn ? lastColumn._count.tasks : 0;
+
+  const pendingTasks = totalTasks - completedTasks;
+  const completionRate =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  // Calculate last activity from task creation dates
+  let lastActivity = new Date(board.createdAt).getTime();
+  board.columns.forEach((column) => {
+    column.tasks.forEach((task) => {
+      const taskTime = new Date(task.createdAt).getTime();
+      if (taskTime > lastActivity) {
+        lastActivity = taskTime;
+      }
+    });
+  });
+
+  const daysSinceActivity = Math.floor(
+    (Date.now() - lastActivity) / (1000 * 60 * 60 * 24)
+  );
+
+  const stats = {
+    totalTasks,
+    completedTasks,
+    pendingTasks,
+    completionRate,
+    daysSinceActivity,
+  };
+
   const colorTheme = getBoardColor(index);
 
   return (

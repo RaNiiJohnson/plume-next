@@ -31,6 +31,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
     moveTaskBetweenColumns: boardStore.moveTaskBetweenColumns,
     rollbackColumn: boardStore.rollbackColumn,
     reorderMutation: boardStore.reorderMutation,
+    taskReorderMutation: boardStore.taskReorderMutation,
   });
 
   const columnsId = useMemo(

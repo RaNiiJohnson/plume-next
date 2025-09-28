@@ -2,7 +2,7 @@
 
 import { BackButton } from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
-import { Lock, Search } from "lucide-react";
+import {  Search } from "lucide-react";
 import Link from "next/link";
 
 export default function NotFound() {

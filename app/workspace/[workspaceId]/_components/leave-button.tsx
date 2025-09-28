@@ -38,7 +38,7 @@ export function LeaveButton({
       // Redirect to ard or home page
       router.push("/");
     } catch (error) {
-      toast.error("An error occurred while leaving the workspace");
+      toast.error("An error occurred while leaving the workspace " + error);
     } finally {
       setIsLoading(false);
     }

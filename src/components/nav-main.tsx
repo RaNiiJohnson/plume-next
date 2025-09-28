@@ -21,61 +21,71 @@ import {
 import { WorkspaceLinksSidebar } from "@/components/Workspace.link";
 import { ThemeToggleDark, ThemeToggleLight } from "./theme-toggle";
 import { NotificationsMenu } from "./notifications-menu";
+import { getUser } from "@/lib/auth-server";
 
 export async function NavMain() {
+  const user = await getUser();
   const organizations = await getOrganizations();
   const sharedOrganizations = await getSharedOrganizations();
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Plume</SidebarGroupLabel>
-      <SidebarMenu>
-        <Collapsible asChild defaultOpen={true} className="group/collapsible">
-          <SidebarMenuItem>
-            <CollapsibleTrigger asChild>
-              <SidebarMenuButton tooltip="Workspaces">
-                <Folder />
-                <span>My workspaces</span>
-                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-              </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarMenuSub>
-                {organizations?.map((organization) => (
-                  <WorkspaceLinksSidebar
-                    key={organization.id}
-                    organization={organization}
-                  />
-                ))}
-              </SidebarMenuSub>
-            </CollapsibleContent>
-          </SidebarMenuItem>
-        </Collapsible>
-      </SidebarMenu>
-      {sharedOrganizations.length > 0 && (
-        <SidebarMenu>
-          <Collapsible asChild className="group/collapsible">
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="Workspaces">
-                  <FolderTree />
-                  <span>Joined workspaces</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {sharedOrganizations.map((organization) => (
-                    <WorkspaceLinksSidebar
-                      key={organization.id}
-                      organization={organization}
-                    />
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
-        </SidebarMenu>
+      {user && (
+        <>
+          <SidebarMenu>
+            <Collapsible
+              asChild
+              defaultOpen={true}
+              className="group/collapsible"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton tooltip="Workspaces">
+                    <Folder />
+                    <span>My workspaces</span>
+                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {organizations?.map((organization) => (
+                      <WorkspaceLinksSidebar
+                        key={organization.id}
+                        organization={organization}
+                      />
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+          </SidebarMenu>
+          {sharedOrganizations.length > 0 && (
+            <SidebarMenu>
+              <Collapsible asChild className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Workspaces">
+                      <FolderTree />
+                      <span>Joined workspaces</span>
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {sharedOrganizations.map((organization) => (
+                        <WorkspaceLinksSidebar
+                          key={organization.id}
+                          organization={organization}
+                        />
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          )}
+        </>
       )}
 
       <SidebarMenu>
@@ -105,9 +115,11 @@ export async function NavMain() {
         </Collapsible>
       </SidebarMenu>
 
-      <SidebarMenu>
-        <NotificationsMenu />
-      </SidebarMenu>
+      {user && (
+        <SidebarMenu>
+          <NotificationsMenu />
+        </SidebarMenu>
+      )}
     </SidebarGroup>
   );
 }

@@ -209,7 +209,7 @@ export default async function NotificationsPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">No notifications</h3>
               <p className="text-muted-foreground">
-                You don't have any notifications at the moment.
+                You don&apos;t have any notifications at the moment.
               </p>
             </CardContent>
           </Card>

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { WorkspaceLinks } from "@/components/Workspace.link";
 import { getUser } from "@/lib/auth-server";
 import { getOrganizations } from "@/lib/server/organizations";
-import { ArrowRight } from "lucide-react";
+
 import Link from "next/link";
 
 export default async function Home() {
@@ -18,7 +18,7 @@ export default async function Home() {
             Focus on what matters.
             <br />
             <span className="text-muted-foreground">
-              We'll handle the rest.
+              We&apos;ll handle the rest.
             </span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">

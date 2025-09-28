@@ -1,13 +1,12 @@
-import { getUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import BoardView from "./BoardView";
+import { Board } from "@/lib/types/type";
 
 type Pageprops = {
   params: Promise<{ boardId: string }>;
 };
 
 export default async function Page(props: Pageprops) {
-  const user = await getUser();
   const params = await props.params;
 
   const board = await prisma.board.findUnique({
@@ -41,9 +40,37 @@ export default async function Page(props: Pageprops) {
     return <div>Board not found.</div>;
   }
 
+  // Transform the data to match the expected types
+  const transformedBoard: Board = {
+    id: board.id,
+    title: board.title,
+    userId: board.userId,
+    description: board.description,
+    isPublic: board.isPublic,
+    createdAt: board.createdAt,
+    organizationId: board.organizationId,
+    organization: board.organization,
+    columns: board.columns.map((column) => ({
+      id: column.id,
+      title: column.title,
+      position: column.position,
+      boardId: column.boardId,
+      tasks: column.tasks.map((task) => ({
+        id: task.id,
+        content: task.content,
+        description: task.description || undefined,
+        position: task.position,
+        columnId: task.columnId,
+        tags: task.tags,
+        dueDate: task.dueDate,
+        createdAt: task.createdAt,
+      })),
+    })),
+  };
+
   return (
     <div className="h-screen">
-      <BoardView board={board} />
+      <BoardView board={transformedBoard} />
     </div>
   );
 }

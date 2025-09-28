@@ -13,7 +13,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { addBoardSafeAction } from "../_actions";
-import { useRouter } from "next/navigation";
 
 const BoardFormSchema = z.object({
   title: z.string().min(2, {
@@ -29,7 +28,6 @@ export const BoardForm = ({
   onSuccess?: () => void;
   organizationId: string;
 }) => {
-  const router = useRouter();
   // 1. Define your form.
   const form = useForm<z.infer<typeof BoardFormSchema>>({
     resolver: zodResolver(BoardFormSchema),
@@ -43,7 +41,7 @@ export const BoardForm = ({
 
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof BoardFormSchema>) {
-    const board = await executeAsync(values);
+     await executeAsync(values);
     form.reset();
     // router.push(`/workspace/${organizationId}/${board.data?.id}`);
     onSuccess?.();

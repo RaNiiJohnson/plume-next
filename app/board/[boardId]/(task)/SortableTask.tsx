@@ -49,13 +49,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import React, {
-  useEffect,
-  useOptimistic,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
+import React, { useOptimistic, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useBoardStore } from "../_hooks/useBoardStore";
 import { useParams, useRouter } from "next/navigation";
@@ -77,14 +71,44 @@ export default function SortableTask({
   onEditStart,
   onEditEnd,
 }: SortableTaskProps) {
+  // All hooks must be called before any early returns
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isTagsDialogOpen, setIsTagsDialogOpen] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>(task.tags || []);
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const [isPending, startTransition] = useTransition();
+  const [optimisticContent, setOptimisticContent] = useOptimistic(
+    task.content,
+    (_, newContent: string) => newContent
+  );
+  const [optimisticTag, setOptimisticTag] = useOptimistic(
+    task.tags || [],
+    (_, newTags: string[]) => newTags
+  );
+  const editContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: session } = useSession();
   const router = useRouter();
   const params = useParams();
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: task.id,
+    data: {
+      type: "task",
+      task,
+    },
+    disabled: isEditing,
+  });
+
   const currentUserId = session?.user?.id;
   const currentMemberRole = boardStore?.board?.organization?.members?.find(
     (m) => m.user.id === currentUserId
@@ -117,22 +141,6 @@ export default function SortableTask({
     (col) => col.id !== currentColumnId
   );
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: task.id,
-    data: {
-      type: "task",
-      task,
-    },
-    disabled: isEditing,
-  });
-
   const handleEdit = () => {
     onEditStart();
   };
@@ -162,18 +170,6 @@ export default function SortableTask({
     opacity: isDragging ? 0.3 : 1,
   };
 
-  const ref = useRef<HTMLTextAreaElement>(null);
-  const [isPending, startTransition] = useTransition();
-
-  const [optimisticContent, setOptimisticContent] = useOptimistic(
-    task.content,
-    (_, newContent: string) => newContent
-  );
-  const [optimisticTag, setOptimisticTag] = useOptimistic(
-    task.tags || [],
-    (_, newTags: string[]) => newTags
-  );
-
   const submit = async () => {
     const newContent = ref.current?.value ?? "";
 
@@ -198,9 +194,6 @@ export default function SortableTask({
     }
   };
 
-  const editContainerRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
   // // Close edit on outside click
   // useEffect(() => {
   //   if (!isEditing) return;
@@ -219,7 +212,6 @@ export default function SortableTask({
   //     document.removeEventListener("mousedown", handleDocumentMouseDown);
   //   };
   // }, [isEditing, onEditEnd]);
-
 
   const predefinedTags = [
     { name: "urgent", color: "bg-gradient-to-r from-red-500 to-red-600" },
@@ -247,8 +239,6 @@ export default function SortableTask({
     { name: "frontend", color: "bg-gradient-to-r from-cyan-500 to-cyan-600" },
     { name: "api", color: "bg-gradient-to-r from-teal-500 to-teal-600" },
   ];
-
-  
 
   const handleTagToggle = (tagName: string) => {
     setSelectedTags((prev) =>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, LampDesk } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { setActiveWspace } from "../../app/workspace.action";
 import {
   SidebarMenuSubItem,
