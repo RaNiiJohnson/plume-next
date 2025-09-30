@@ -1,6 +1,8 @@
 import prisma from "@/lib/prisma";
 import BoardView from "./BoardView";
 import { Board } from "@/lib/types/type";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth-server";
 
 type Pageprops = {
   params: Promise<{ boardId: string }>;
@@ -8,6 +10,11 @@ type Pageprops = {
 
 export default async function Page(props: Pageprops) {
   const params = await props.params;
+
+  const session = await getSession();
+  if (!session?.user?.email) {
+    redirect("/auth/signin");
+  }
 
   const board = await prisma.board.findUnique({
     where: { id: params.boardId },
@@ -32,12 +39,8 @@ export default async function Page(props: Pageprops) {
     },
   });
 
-  // if (!user || user.id !== board?.userId) {
-  //   return unauthorized();
-  // }
-
   if (!board) {
-    return <div>Board not found.</div>;
+    redirect("/");
   }
 
   // Transform the data to match the expected types

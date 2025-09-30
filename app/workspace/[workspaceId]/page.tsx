@@ -2,17 +2,24 @@ import prisma from "@/lib/prisma";
 import { Users } from "lucide-react";
 import { BoardCard, AddBoardButton } from "./_components";
 import { calculateBoardsStats } from "./_lib/board-utils";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth-server";
 
 type BoardsPageProps = {
   params: Promise<{ workspaceId: string }>;
 };
 
-export default async function BoardsPage({ params }: BoardsPageProps) {
-  const { workspaceId } = await params;
+export default async function BoardsPage(props: BoardsPageProps) {
+  const params = await props.params;
+
+  const session = await getSession();
+  if (!session?.user?.email) {
+    redirect("/auth/signin");
+  }
 
   const boards = await prisma.board.findMany({
     where: {
-      organizationId: workspaceId,
+      organizationId: params.workspaceId,
     },
     include: {
       columns: {
@@ -57,10 +64,10 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
             key={board.id}
             board={board}
             index={index}
-            workspaceId={workspaceId}
+            workspaceId={params.workspaceId}
           />
         ))}
-        <AddBoardButton organizationId={workspaceId} />
+        <AddBoardButton organizationId={params.workspaceId} />
       </div>
 
       {/* Empty State */}
