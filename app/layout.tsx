@@ -5,7 +5,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { Footer } from "../src/components/Footer";
 import "./globals.css";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { QueryProvider } from "@/components/providers/query-provider";
 
@@ -47,12 +51,17 @@ export default function RootLayout({
             <SidebarProvider>
               <SidebarInset className="flex-1 min-w-0">
                 <div className="flex flex-col h-screen w-full">
-                  <main className="flex-1 w-full">{children}</main>
+                  <main className="flex-1 w-full">
+                    {children}
+                    <div className="absolute top-0 right-0 p-1">
+                      <SidebarTrigger />
+                    </div>
+                  </main>
                   <Footer />
                 </div>
+
                 <Toaster />
               </SidebarInset>
-
               <AppSidebar />
             </SidebarProvider>
           </QueryProvider>
