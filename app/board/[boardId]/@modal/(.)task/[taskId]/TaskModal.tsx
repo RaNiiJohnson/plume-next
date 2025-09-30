@@ -62,7 +62,7 @@ export function TaskModal({
   if (!task || !column) {
     return (
       <div
-        className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+        className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 top-0"
         onClick={handleBackgroundClick}
       >
         <div
@@ -85,11 +85,11 @@ export function TaskModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 flex items-start pt-50 justify-center z-50"
+      className="fixed overflow-y-auto inset-0 bg-black/60 flex items-start md:pt-5 pt-0 justify-center z-50"
       onClick={handleBackgroundClick}
     >
       <div
-        className="bg-background text-foreground rounded-xl p-6 w-full max-w-6xl shadow-2xl border border-border/50 backdrop-blur-sm"
+        className="bg-background text-foreground max-md:h-full md:rounded-xl p-6 w-full max-w-6xl shadow-2xl border border-border/50 backdrop-blur-sm"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
