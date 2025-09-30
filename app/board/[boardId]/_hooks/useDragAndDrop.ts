@@ -3,6 +3,8 @@ import {
   DragEndEvent,
   DragStartEvent,
   PointerSensor,
+  TouchSensor,
+  MouseSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -67,7 +69,12 @@ export const useDragAndDrop = ({
   const [draggedItemWidth, setDraggedItemWidth] = useState<number | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 10 } })
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 10 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    })
   );
 
   const handleDragStart = useCallback(
