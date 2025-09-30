@@ -23,16 +23,6 @@ export const auth = betterAuth({
           `Invited by: ${data.inviter.user.name} (${data.inviter.user.email})`
         );
         console.log(`Organization: ${data.organization.name}`);
-
-        // await sendEmail({
-        //   to: data.email,
-        //   subject: `You're invited to join ${data.organization.name}`,
-        //   html: `
-        //     <h2>You've been invited to join ${data.organization.name}</h2>
-        //     <p>${data.inviter.user.name} has invited you to join their organization.</p>
-        //     <a href="${inviteLink}">Accept Invitation</a>
-        //   `
-        // });
       },
       invitationExpiresIn: 7 * 24 * 60 * 60,
     }),
@@ -48,10 +38,19 @@ export const auth = betterAuth({
       clientId: process.env.GITHUB_CLIENT_ID as string,
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
     },
-    facebook: {
-      clientId: process.env.FACEBOOK_CLIENT_ID as string,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
-      scopes: ["email", "public_profile"],
+  },
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
+  ].filter(Boolean),
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5, // 5 minutes
     },
+  },
+  advanced: {
+    useSecureCookies: process.env.NODE_ENV === "production",
+    cookiePrefix: "auth",
   },
 });
