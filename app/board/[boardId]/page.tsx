@@ -72,7 +72,7 @@ export default async function Page(props: Pageprops) {
   };
 
   return (
-    <div className="h-screen">
+    <div className="h-full">
       <BoardView board={transformedBoard} />
     </div>
   );

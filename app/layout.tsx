@@ -51,11 +51,11 @@ export default function RootLayout({
           <QueryProvider>
             <SidebarProvider>
               <SidebarInset className="flex-1 min-w-0">
-                <div className="flex flex-col h-full w-full">
+                <div className="flex flex-col min-h-screen w-full">
                   <Header />
                   <main className="flex-1 w-full">{children}</main>
-                  <Footer />
                 </div>
+                <Footer />
 
                 <Toaster />
               </SidebarInset>

@@ -45,7 +45,7 @@ export async function MembersList({ organizationId }: MembersListProps) {
   const currentUserMember = members.find((m) => m.user.id === currentUser?.id);
   const currentUserRole = currentUserMember?.role;
 
-  if (members.length === 0) {
+  if (members.length === 1) {
     return (
       <Card>
         <CardContent className="text-center py-12">
@@ -69,15 +69,14 @@ export async function MembersList({ organizationId }: MembersListProps) {
           Members
         </CardTitle>
         <CardDescription>
-          {members.length} member{members.length === 1 ? "" : "s"} in this
-          workspace
+          {members.length} members in this workspace
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {members.map(async (member) => (
           <div
             key={member.id}
-            className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
+            className="flex items-center justify-between p-3 md:p-4 rounded-lg bg-muted/50"
           >
             <div className="flex items-center gap-4">
               <Avatar className="w-10 h-10">
@@ -86,7 +85,7 @@ export async function MembersList({ organizationId }: MembersListProps) {
               </Avatar>
               <div className="space-y-1">
                 <h3 className="flex items-center gap-2 ">
-                  <span>{member.user.name}</span>
+                  <span className="max-md:text-sm">{member.user.name}</span>
                   {(() => {
                     // Si c'est un owner → toujours Badge (pas modifiable)
                     if (member.role === "owner") {
@@ -119,10 +118,8 @@ export async function MembersList({ organizationId }: MembersListProps) {
                     );
                   })()}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  {member.user.email}
-                </p>
-                <p className="text-xs text-muted-foreground/60">
+
+                <p className="text-xs text-muted-foreground/50">
                   Joined {formatDate(member.createdAt)}
                 </p>
               </div>

@@ -60,7 +60,7 @@ export default async function WorkspaceLayout({
   }
 
   return (
-    <div className="flex flex-col h-screen w-full min-w-0 p-3">
+    <div className="flex flex-col h-full w-full min-w-0 p-3">
       <div className="flex-1 flex flex-col space-y-6 min-w-0 overflow-hidden">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0">
@@ -96,15 +96,14 @@ export default async function WorkspaceLayout({
           </div>
         </div>
 
-        <div className="flex-shrink-0">
+        <div>
           <WorkspaceNav
             workspaceId={workspaceId}
             canAccessSettings={canAccessSettings}
           />
         </div>
 
-        {/* Content area with proper overflow handling */}
-        <div className="flex-1 min-h-0 min-w-0">{children}</div>
+        <div className="flex-1">{children}</div>
       </div>
     </div>
   );

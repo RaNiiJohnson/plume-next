@@ -12,7 +12,7 @@ export function InviteSection({ organizationId }: InviteSectionProps) {
           <h3 className="text-lg font-semibold text-primary mb-2">
             Invite Team Members
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground/50">
             Collaborate with your team by inviting them to this workspace
           </p>
         </div>

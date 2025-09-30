@@ -48,17 +48,17 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
 
   return (
     <div
-      className="h-full w-full flex flex-col min-w-0"
+      className="h-full w-full flex flex-col"
       onClick={handleBackgroundClick}
     >
       {/* Header du board */}
-      <div className="flex items-center justify-between mb-8 flex-shrink-0 p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-8 flex-shrink-0 px-4 md:px-6 py-4 md:py-6">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight">
               {boardStore.board?.title}
             </h1>
-            <p className="text-sm text-secondary-foreground/50 mt-1">
+            <p className="text-xs md:text-sm text-secondary-foreground/50 mt-1">
               {boardStore.board?.columns.length || 0} colonnes •{" "}
               {boardStore.board?.columns.reduce(
                 (acc, col) => acc + col.tasks.length,
@@ -71,7 +71,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
       </div>
 
       {/* Zone scrollable des colonnes */}
-      <div className="flex-1 min-h-0 min-w-0">
+      <div className="flex-1">
         <DndContext
           sensors={dragAndDrop.sensors}
           collisionDetection={pointerWithin}
@@ -80,7 +80,7 @@ export default function BoardView({ board: initialBoard }: { board: Board }) {
           onDragCancel={dragAndDrop.handleDragCancel}
         >
           <div
-            className="flex gap-8 items-start overflow-x-auto custom-scrollbar h-full pb-4 min-w-0"
+            className="flex gap-4 md:gap-8 items-start overflow-x-auto custom-scrollbar h-full pb-4 px-4 md:px-5"
             style={{ width: "100%" }}
           >
             <SortableContext

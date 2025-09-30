@@ -200,7 +200,7 @@ export default function ColumnView({
       {...attributes}
       style={style}
       className={`
-        bg-card border-2 rounded-xl min-w-[300px] max-w-[300px] flex flex-col shadow-sm 
+        bg-card border-2 rounded-xl w-[280px] md:w-[300px] flex flex-col shadow-sm 
         transition-all duration-200 ease-out max-h-[80vh] cursor-grab active:cursor-grabbing
         hover:shadow-md hover:scale-[1.02]
         ${columnStyle.borderColor}
@@ -210,13 +210,13 @@ export default function ColumnView({
       {...listeners}
     >
       <div
-        className={`${columnStyle.headerBg} border-b ${columnStyle.borderColor} rounded-t-xl px-4 py-3`}
+        className={`${columnStyle.headerBg} border-b ${columnStyle.borderColor} rounded-t-xl px-3 md:px-4 py-3`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {columnStyle.icon}
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-lg text-card-foreground">
+              <h3 className="font-semibold text-base md:text-lg text-card-foreground truncate">
                 {column.title}
               </h3>
               <Badge
@@ -284,13 +284,13 @@ export default function ColumnView({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 min-h-0 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-2 min-h-0 custom-scrollbar">
         <SortableContext
           items={column.tasks.map((task) => task.id)}
           strategy={verticalListSortingStrategy}
           id={column.id}
         >
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2.5">
             {taskCount === 0 ? (
               <div className="flex flex-col items-center justify-center p-2 text-center">
                 <p className="text-sm font-medium text-muted-foreground mb-1">
@@ -326,7 +326,7 @@ export default function ColumnView({
         </SortableContext>
       </div>
 
-      <div className="px-3 pb-3">
+      <div className="px-2 md:px-3 pb-3">
         <AddTask
           columnId={column.id}
           boardId={boardStore.board!.id}
