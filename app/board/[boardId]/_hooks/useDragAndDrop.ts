@@ -67,7 +67,7 @@ export const useDragAndDrop = ({
   const [draggedItemWidth, setDraggedItemWidth] = useState<number | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 3 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 10 } })
   );
 
   const handleDragStart = useCallback(
