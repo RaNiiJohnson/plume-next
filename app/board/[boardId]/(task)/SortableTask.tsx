@@ -330,7 +330,7 @@ export default function SortableTask({
                   handleEdit();
                 }}
                 variant="ghost"
-                className="size-5 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+                className="size-5 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity ml-2"
               >
                 <Edit />
               </Button>
