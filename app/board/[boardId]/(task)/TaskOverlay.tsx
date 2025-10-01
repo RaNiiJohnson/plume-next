@@ -41,7 +41,7 @@ export default function TaskOverlay({ task, width }: TaskOverlayProps) {
 
   return (
     <div
-      className="border border-muted p-3 rounded-sm shadow-sm hover:bg-accent cursor-grabbing select-none"
+      className="border border-muted p-3 rounded-xs shadow-sm hover:bg-accent cursor-grabbing select-none"
       style={width ? { width } : undefined}
     >
       {task.content}
