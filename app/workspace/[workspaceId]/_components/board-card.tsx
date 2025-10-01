@@ -126,7 +126,7 @@ export function BoardCard({ board, index }: BoardCardProps) {
       {/* Board Card with varied background color */}
       <Link
         href={`/board/${board.id}`}
-        className="block relative overflow-hidden rounded-xl bg-card text-card-foreground shadow-sm hover:shadow-md transition-all duration-200 p-6 border border-muted hover:border-primary/20 hover:bg-card/80 group h-full"
+        className="block relative overflow-hidden rounded-sm bg-card text-card-foreground shadow-sm hover:shadow-md transition-all duration-200 p-6 border border-muted hover:border-primary/20 hover:bg-card/80 group h-full"
       >
         {/* Background gradient */}
         <div
