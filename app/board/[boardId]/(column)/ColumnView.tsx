@@ -199,7 +199,7 @@ export default function ColumnView({
       ref={mergedRef}
       {...attributes}
       className={`
-        bg-card border-2 rounded-xl flex flex-col shadow-sm 
+        bg-card border-2 rounded-sm flex flex-col shadow-sm 
         transition-all duration-200 ease-out max-h-[80vh] cursor-grab active:cursor-grabbing
         hover:shadow-md hover:scale-[1.02]
         ${columnStyle.borderColor}
