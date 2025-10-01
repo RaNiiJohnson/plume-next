@@ -198,15 +198,20 @@ export default function ColumnView({
       suppressHydrationWarning={true}
       ref={mergedRef}
       {...attributes}
-      style={style}
       className={`
-        bg-card border-2 rounded-xl w-[280px] md:w-[300px] flex flex-col shadow-sm 
+        bg-card border-2 rounded-xl flex flex-col shadow-sm 
         transition-all duration-200 ease-out max-h-[80vh] cursor-grab active:cursor-grabbing
         hover:shadow-md hover:scale-[1.02]
         ${columnStyle.borderColor}
         ${isDragging ? "shadow-2xl ring-2 ring-primary/20" : ""}
         ${isOver ? "ring-2 ring-blue-400 bg-blue-50/50" : ""}
       `}
+      style={{
+        ...style,
+        width: "280px",
+        minWidth: "280px",
+        maxWidth: "280px",
+      }}
       {...listeners}
     >
       <div
