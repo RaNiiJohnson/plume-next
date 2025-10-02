@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,15 +8,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Circle, Clock, Trash2 } from "lucide-react";
+import { CheckCircle2, Circle, Trash2 } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { deleteBoardAction } from "../_actions";
-import {
-  getActivityText,
-  getProgressColor,
-  getBoardColor,
-} from "../_lib/board-utils";
+import { getProgressColor, getBoardColor } from "../_lib/board-utils";
+import { ActivityTime } from "./activity-time";
+import { BoardStatusBadge } from "./board-status-badge";
 
 type BoardWithStats = {
   id: string;
@@ -68,16 +65,11 @@ export function BoardCard({ board, index }: BoardCardProps) {
     });
   });
 
-  const daysSinceActivity = Math.floor(
-    (Date.now() - lastActivity) / (1000 * 60 * 60 * 24)
-  );
-
   const stats = {
     totalTasks,
     completedTasks,
     pendingTasks,
     completionRate,
-    daysSinceActivity,
   };
 
   const colorTheme = getBoardColor(index);
@@ -145,10 +137,7 @@ export function BoardCard({ board, index }: BoardCardProps) {
               <h3 className="text-lg font-semibold group-hover:text-primary transition truncate">
                 {board.title}
               </h3>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span>Updated {getActivityText(stats.daysSinceActivity)}</span>
-              </div>
+              <ActivityTime lastActivity={lastActivity} />
             </div>
           </div>
 
@@ -185,23 +174,11 @@ export function BoardCard({ board, index }: BoardCardProps) {
                 </div>
               </div>
 
-              {stats.totalTasks === 0 ? (
-                <Badge variant="secondary" className="text-xs">
-                  Empty
-                </Badge>
-              ) : stats.completionRate === 100 ? (
-                <Badge variant="default" className="text-xs bg-green-600">
-                  Complete
-                </Badge>
-              ) : stats.daysSinceActivity === 0 ? (
-                <Badge variant="default" className="text-xs bg-blue-600">
-                  Active
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-xs">
-                  In Progress
-                </Badge>
-              )}
+              <BoardStatusBadge
+                totalTasks={stats.totalTasks}
+                completionRate={stats.completionRate}
+                lastActivity={lastActivity}
+              />
             </div>
           </div>
 
