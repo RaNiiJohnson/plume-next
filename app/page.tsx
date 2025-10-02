@@ -4,6 +4,7 @@ import { getUser } from "@/lib/auth-server";
 import { getOrganizations } from "@/lib/server/organizations";
 
 import Link from "next/link";
+import { Suspense } from "react";
 
 export default async function Home() {
   const organizations = await getOrganizations();
@@ -31,17 +32,19 @@ export default async function Home() {
         {user ? (
           <div className="space-y-8">
             {organizations.length > 0 ? (
-              <div className="space-y-4">
-                <p className="text-sm font-medium">Your workspaces</p>
-                <div className="grid gap-3 max-w-md mx-auto">
-                  {organizations.map((organization) => (
-                    <WorkspaceLinks
-                      key={organization.id}
-                      organization={organization}
-                    />
-                  ))}
+              <Suspense>
+                <div className="space-y-4">
+                  <p className="text-sm font-medium">Your workspaces</p>
+                  <div className="grid gap-3 max-w-md mx-auto">
+                    {organizations.map((organization) => (
+                      <WorkspaceLinks
+                        key={organization.id}
+                        organization={organization}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </Suspense>
             ) : (
               <div className="text-center space-y-4">
                 <p className="text-muted-foreground">No workspaces yet</p>
