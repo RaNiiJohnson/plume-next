@@ -101,7 +101,7 @@ export function TaskModal({
                 {task.content}
               </h1>
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex max-sm:flex-col sm:items-center sm:gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 In{" "}
