@@ -1,7 +1,6 @@
-import prisma from "@/lib/prisma";
-import { TaskModal } from "./TaskModal";
 import { getUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
+import { TaskModalContent } from "./_components/task-modal-content";
 
 interface TaskModalPageProps {
   params: Promise<{
@@ -18,34 +17,10 @@ export default async function TaskModalPage({ params }: TaskModalPageProps) {
     redirect("/auth/signin");
   }
 
-  const task = await prisma.task.findUnique({
-    where: {
-      id: taskId,
-    },
-    include: {
-      comments: {
-        include: {
-          author: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "asc" },
-      },
-    },
-  });
-
-  if (!task) {
-    return <div>Task not found</div>;
-  }
-
   return (
-    <TaskModal
+    <TaskModalContent
       boardId={boardId}
-      task={task}
+      taskId={taskId}
       currentUserId={user.id}
       currentUserName={user.name}
       currentUserImage={user.image || null}
