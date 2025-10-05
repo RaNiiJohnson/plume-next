@@ -155,7 +155,8 @@ export function TaskTags({ taskId, boardId, initialTags }: TaskTagsProps) {
               className={`${getTagColor(
                 tag
               )} text-white text-xs px-3 py-1 rounded-full 
-              shadow-sm hover:shadow-md border-0 group-hover:pr-6 transition-all`}
+              shadow-sm hover:shadow-md border-0 
+              group-hover:pr-6 [@media(hover:none)]:pr-6 transition-all`}
             >
               <span className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 bg-white/70 rounded-full"></div>
@@ -163,7 +164,8 @@ export function TaskTags({ taskId, boardId, initialTags }: TaskTagsProps) {
               </span>
               <button
                 onClick={() => handleRemoveTag(tag)}
-                className="absolute cursor-pointer right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 
+                className="absolute cursor-pointer right-1 top-1/2 -translate-y-1/2 
+                       opacity-0 group-hover:opacity-100 hover:[@media(hover:none)]:opacity-100
                        text-white/70 hover:text-white transition-opacity"
                 aria-label={`Remove ${tag} tag`}
               >
