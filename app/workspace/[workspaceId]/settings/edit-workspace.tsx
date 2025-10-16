@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Building2, Link, Settings } from "lucide-react";
@@ -23,7 +22,6 @@ export default function EditWorkspace({
   const handleSubmit = async (formData: FormData) => {
     const name = formData.get("name") as string;
     const slug = formData.get("slug") as string;
-    const logo = formData.get("logo") as string;
 
     if (!name.trim()) {
       setError("Workspace name is required");
@@ -41,7 +39,6 @@ export default function EditWorkspace({
       const result = await updateWorkspace({
         name: name.trim(),
         slug: slug.trim(),
-        logo: logo.trim() || undefined,
         workspaceId: organization.id,
       });
 
@@ -110,46 +107,6 @@ export default function EditWorkspace({
                   /
                 </span>
               </div>
-            </div>
-          </div>
-
-          {/* Logo Section */}
-          <div className="space-y-4">
-            <Label className="flex items-center gap-2 text-sm font-medium">
-              Workspace Logo
-            </Label>
-            {/* Preview du logo */}
-            <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/30">
-              <Avatar className="w-16 h-16">
-                <AvatarImage
-                  src={organization.logo || ""}
-                  alt="Workspace logo"
-                />
-                <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
-                  {organization.name?.charAt(0)?.toUpperCase() || "W"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Current Logo</p>
-                <p className="text-xs text-muted-foreground">
-                  {organization.logo
-                    ? "Custom logo uploaded"
-                    : "Using default avatar"}
-                </p>
-              </div>
-            </div>
-            {/* Input pour le logo */}
-            <div className="space-y-2">
-              <Input
-                id="logo"
-                name="logo"
-                defaultValue={organization.logo || ""}
-                placeholder="Enter logo URL or upload image"
-                className="transition-all focus:ring-2 focus:ring-primary/20"
-              />
-              <p className="text-xs text-muted-foreground">
-                Paste an image URL or upload a file. Recommended size: 120x120px
-              </p>
             </div>
           </div>
 

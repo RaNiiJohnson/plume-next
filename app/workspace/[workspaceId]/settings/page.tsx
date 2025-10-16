@@ -85,41 +85,6 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
         <EditWorkspace organization={organization} />
       )}
 
-      {/* Organization Stats */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Workspace Overview
-          </CardTitle>
-          <CardDescription>
-            Key statistics about your organization
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-4 rounded-lg bg-muted/50">
-              <div className="text-2xl font-bold text-primary">
-                {organization._count.members}
-              </div>
-              <div className="text-sm text-muted-foreground">Total Members</div>
-            </div>
-            <div className="text-center p-4 rounded-lg bg-muted/50">
-              <div className="text-2xl font-bold text-primary">
-                {organization._count.Board}
-              </div>
-              <div className="text-sm text-muted-foreground">Active Boards</div>
-            </div>
-            <div className="text-center p-4 rounded-lg bg-muted/50">
-              <div className="text-2xl font-bold text-primary">
-                {formatDate(organization.createdAt)}
-              </div>
-              <div className="text-sm text-muted-foreground">Created</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Danger Zone */}
       {currentUserRole === "owner" &&
         (await hasPermission({ workspace: ["delete"] })) && (
