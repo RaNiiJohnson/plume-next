@@ -85,11 +85,11 @@ export function TaskModal({
 
   return (
     <div
-      className="fixed overflow-y-auto inset-0 bg-black/60 flex items-start md:pt-5 pt-0 justify-center z-50"
+      className="fixed overflow-y-auto h-full inset-0 bg-black/60 flex items-start md:pt-5 pt-0 justify-center z-50"
       onClick={handleBackgroundClick}
     >
       <div
-        className="bg-background text-foreground max-md:h-full md:rounded-xl p-6 w-full max-w-6xl shadow-2xl border border-border/50 backdrop-blur-sm"
+        className="bg-background text-foreground  md:rounded-xl p-6 w-full max-w-6xl shadow-2xl border border-border/50 backdrop-blur-sm"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
