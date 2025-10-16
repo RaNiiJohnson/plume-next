@@ -7,10 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getUser } from "@/lib/auth-server";
-import { formatDate } from "@/lib/form-date";
 import prisma from "@/lib/prisma";
 import { hasPermission } from "@/lib/server/permissions";
-import { Users } from "lucide-react";
 import { redirect } from "next/navigation";
 import EditWorkspace from "./edit-workspace";
 
